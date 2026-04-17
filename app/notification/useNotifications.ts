@@ -56,7 +56,6 @@ export function useNotifications(
 
             try {
                 const batch = await fetchNotifications(controller.signal);
-
                 if (isActive && !controller.signal.aborted) {
                     setItems((prev) => {
                         const merged = mergeNotificationBatches(prev, batch);

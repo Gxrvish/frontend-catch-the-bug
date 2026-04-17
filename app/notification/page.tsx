@@ -9,7 +9,7 @@ import {
 } from "./notificationApi";
 import NotificationCenter from "./NotificationCenter";
 
-const REPRO_SEED_COUNT = 4;
+const REPRO_SEED_COUNT = 12;
 const RANDOM_POLL_INTERVAL_MS = 3000;
 const REPRO_POLL_INTERVAL_MS = 2500;
 
@@ -82,6 +82,10 @@ export default function NotificationPage() {
 
                 {mode === "repro" ? (
                     <ol className="mb-5 list-inside list-decimal rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-900 space-y-1">
+                        <li>
+                            Scenario starts with 12 notifications and keeps
+                            adding more over time.
+                        </li>
                         <li>Open the bell panel.</li>
                         <li>Click mark-as-read on any unread notification.</li>
                         <li>

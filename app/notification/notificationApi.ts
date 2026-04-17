@@ -10,6 +10,9 @@ const REPRO_FETCH_LATENCY_MS = 250;
 const REPRO_MARK_AS_READ_LATENCY_MS = 4200;
 const REPRO_MARK_ALL_AS_READ_LATENCY_MS = 4200;
 const REPRO_DISMISS_LATENCY_MS = 250;
+const MAX_RECENT_IDS = 80;
+const REPRO_MAX_ITEMS = 30;
+const REPRO_NEW_ITEMS_PER_POLL = 1;
 
 const delay = (ms: number, signal?: AbortSignal): Promise<void> =>
     new Promise((resolve, reject) => {
@@ -78,7 +81,7 @@ function createServerNotification(): ServerNotification {
     };
     serverStore.set(id, notif);
     recentIds.push(id);
-    if (recentIds.length > 15) recentIds.shift();
+    if (recentIds.length > MAX_RECENT_IDS) recentIds.shift();
     return notif;
 }
 
@@ -90,22 +93,25 @@ export async function fetchNotifications(
             ? REPRO_FETCH_LATENCY_MS
             : randomBetween(1000, 4500);
     await delay(latency, signal);
-
     const results: Notification[] = [];
-
     if (simulationMode === "repro") {
         if (recentIds.length === 0) {
             createServerNotification();
         }
 
-        const replayIds = recentIds.slice(-6).reverse();
-        for (const id of replayIds) {
-            const stored = serverStore.get(id);
-            if (stored) {
-                results.push({ ...stored });
-            }
+        for (
+            let i = 0;
+            i < REPRO_NEW_ITEMS_PER_POLL && serverStore.size < REPRO_MAX_ITEMS;
+            i += 1
+        ) {
+            createServerNotification();
         }
 
+        for (const stored of serverStore.values()) {
+            results.push({ ...stored });
+        }
+
+        results.sort((a, b) => b.createdAt - a.createdAt);
         return results;
     }
 
