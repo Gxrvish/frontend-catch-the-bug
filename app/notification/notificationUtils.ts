@@ -7,14 +7,22 @@ import type { Notification, NotificationFilters } from "./notification.types";
  */
 export function mergeNotificationBatches(
     existing: Notification[],
-    incoming: Notification[]
+    incoming: Notification[],
+    pendingReads: Set<string>
 ): Notification[] {
     if (incoming.length === 0) return existing;
-
+    const existingMap = new Map(existing.map((item) => [item.id, item]));
     const map = new Map<string, Notification>(existing.map((n) => [n.id, n]));
 
     for (const incomingItem of incoming) {
-        map.set(incomingItem.id, incomingItem);
+        const incomingId = incomingItem.id;
+        const isInFlight = pendingReads.has(incomingId);
+        const shouldKeepLocalRead = isInFlight && !incomingItem.isRead;
+        const existingItem = existingMap.get(incomingId);
+        map.set(
+            incomingId,
+            shouldKeepLocalRead ? (existingItem ?? incomingItem) : incomingItem
+        );
     }
 
     return Array.from(map.values()).sort((a, b) => b.createdAt - a.createdAt);
