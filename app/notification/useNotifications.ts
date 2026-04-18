@@ -58,7 +58,11 @@ export function useNotifications(
                 const batch = await fetchNotifications(controller.signal);
                 if (isActive && !controller.signal.aborted) {
                     setItems((prev) => {
-                        const merged = mergeNotificationBatches(prev, batch);
+                        const merged = mergeNotificationBatches(
+                            prev,
+                            batch,
+                            pendingReads
+                        );
                         return merged.length > maxVisibleItems
                             ? merged.slice(0, maxVisibleItems)
                             : merged;
