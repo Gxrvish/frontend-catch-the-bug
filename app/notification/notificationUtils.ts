@@ -1,5 +1,3 @@
-import type { RefObject } from "react";
-
 import type { Notification, NotificationFilters } from "./notification.types";
 
 /**
@@ -10,7 +8,7 @@ import type { Notification, NotificationFilters } from "./notification.types";
 export function mergeNotificationBatches(
     existing: Notification[],
     incoming: Notification[],
-    pendingReads: RefObject<Set<string>>
+    pendingReads: Set<string>
 ): Notification[] {
     if (incoming.length === 0) return existing;
     const existingMap = new Map(existing.map((item) => [item.id, item]));
@@ -18,7 +16,7 @@ export function mergeNotificationBatches(
 
     for (const incomingItem of incoming) {
         const incomingId = incomingItem.id;
-        const isInFlight = pendingReads.current.has(incomingId);
+        const isInFlight = pendingReads.has(incomingId);
         const shouldKeepLocalRead = isInFlight && !incomingItem.isRead;
         const existingItem = existingMap.get(incomingId);
         map.set(

@@ -61,7 +61,7 @@ export function useNotifications(
                         const merged = mergeNotificationBatches(
                             prev,
                             batch,
-                            pendingReads
+                            pendingReads.current
                         );
                         return merged.length > maxVisibleItems
                             ? merged.slice(0, maxVisibleItems)
