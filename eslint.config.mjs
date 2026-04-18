@@ -50,6 +50,7 @@ export default [
             // Best practices
             eqeqeq: ["error", "always"],
             curly: "error",
+            "nonblock-statement-body-position": ["error", "below"],
             "no-console": ["warn", { allow: ["warn", "error"] }],
             "no-debugger": "error",
             "prefer-const": "error",
