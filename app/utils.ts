@@ -20,6 +20,16 @@ function shouldSkipFolder(segment: string): boolean {
     );
 }
 
+export function getSolvedRoutes(): string[] {
+    const solvedFile = path.join(process.cwd(), "app", "solved.json");
+    try {
+        const parsed = JSON.parse(fs.readFileSync(solvedFile, "utf8"));
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
 export function getProblemRoutes(): string[] {
     const appDir = path.join(process.cwd(), "app");
     const routes = new Set<string>();

@@ -1,9 +1,12 @@
 import Link from "next/link";
 
-import { getProblemRoutes } from "./utils";
+import { getProblemRoutes, getSolvedRoutes } from "./utils";
 
 export default function Home() {
-    const routes = getProblemRoutes();
+    const allRoutes = getProblemRoutes();
+    const solved = new Set(getSolvedRoutes());
+    const routes = allRoutes.filter((route) => !solved.has(route));
+    const solvedCount = allRoutes.length - routes.length;
 
     return (
         <main className="min-h-screen bg-gray-100 px-4 py-10">
@@ -13,6 +16,13 @@ export default function Home() {
                 </h1>
                 <p className="mb-3 text-sm text-gray-600">
                     Pick a problem route and start debugging.
+                    {solvedCount > 0 && (
+                        <span className="text-gray-400">
+                            {" "}
+                            {solvedCount} solved problem
+                            {solvedCount === 1 ? "" : "s"} hidden.
+                        </span>
+                    )}
                 </p>
                 <a
                     href="https://github.com/Gxrvish/frontend-catch-the-bug"
@@ -47,7 +57,9 @@ export default function Home() {
 
                 {routes.length === 0 ? (
                     <p className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
-                        No problem routes found yet.
+                        {solvedCount > 0
+                            ? "Every problem is solved. 🎉"
+                            : "No problem routes found yet."}
                     </p>
                 ) : (
                     <ul className="space-y-2">
