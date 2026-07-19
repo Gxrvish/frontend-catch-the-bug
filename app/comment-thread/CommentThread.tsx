@@ -38,6 +38,9 @@ export const CommentThread = () => {
                 setError(
                     e instanceof Error ? e.message : "Failed to post comment."
                 );
+                setComments((prev) =>
+                    prev.filter((c) => c.id !== optimistic.id)
+                );
             });
     };
 

@@ -6,7 +6,8 @@ import { mergeServerBatch, rollbackLikeState } from "./activityFeedUtils";
 const mergeWithPending = mergeServerBatch as unknown as (
     existing: ActivityItem[],
     incoming: ActivityItem[],
-    pendingLikes: Map<string, boolean>
+    pendingLikes: Map<string, boolean>,
+    pendingDismissals: Set<string>
 ) => ActivityItem[];
 
 const makeItem = (
@@ -33,7 +34,12 @@ describe("activityFeed utils regression", () => {
         const incoming = [makeItem(id, false, 10, 100)];
         const pendingLikes = new Map<string, boolean>([[id, true]]);
 
-        const merged = mergeWithPending(existing, incoming, pendingLikes);
+        const merged = mergeWithPending(
+            existing,
+            incoming,
+            pendingLikes,
+            new Set()
+        );
 
         expect(merged[0]?.isLiked).toBe(true);
         expect(merged[0]?.likeCount).toBe(11);
@@ -43,7 +49,7 @@ describe("activityFeed utils regression", () => {
         const id = "act-2";
         const staleItems = [makeItem(id, false, 10, 101)];
 
-        const rolledBack = rollbackLikeState(staleItems, id);
+        const rolledBack = rollbackLikeState(staleItems, id, new Set());
 
         expect(rolledBack[0]?.isLiked).toBe(false);
         expect(rolledBack[0]?.likeCount).toBe(10);

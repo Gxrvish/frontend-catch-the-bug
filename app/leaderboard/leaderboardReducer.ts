@@ -23,7 +23,11 @@ export const leaderboardReducer = (
             for (const u of action.payload) {
                 map[u.id] = u;
             }
-            return { users: map, loading: false };
+            return {
+                ...state,
+                users: { ...map, ...state.users },
+                loading: false,
+            };
         }
 
         case "UPDATE_USER":
