@@ -9,7 +9,7 @@ tickets from a performance review.
 
 ## Ticket A — "The badge re-renders on everything"
 
-The active-items badge re-renders on *every* store change, even ones that
+The active-items badge re-renders on _every_ store change, even ones that
 don't affect its number — adding an out-of-stock slot, bumping an
 unrelated counter, anything. On a busy cart page the badge is the hottest
 component in the profiler, re-rendering dozens of times for no visible
@@ -41,13 +41,13 @@ resets the count. Any `setState` of one slice erases every other slice.
 - **A:** the badge selects `state.items.filter(i => i.qty > 0)` — a brand
   **new array every call**. The hook stores that in `useState` and
   `setValue`s the fresh array on every notification, so `Object.is` never
-  matches and the component always re-renders. Select a *stable*,
+  matches and the component always re-renders. Select a _stable_,
   comparable value (the derived count/primitive) — or a slice with an
   equality function — so unchanged results bail out of rendering.
 - **B:** `subscribe` returns an unsubscribe function, but the hook's
   `useEffect` never returns it as cleanup, so the listener outlives the
   component. An effect that subscribes must return the unsubscribe.
-- **C:** `setState` does `state = partial` — it *replaces* the whole
+- **C:** `setState` does `state = partial` — it _replaces_ the whole
   state with whatever slice the caller passed, dropping the rest. A
   partial update has to be merged onto the current state
   (`{ ...state, ...partial }`).
@@ -55,11 +55,20 @@ resets the count. Any `setState` of one slice erases every other slice.
 ## Requirements for the Fix
 
 - An update that doesn't change the badge's value doesn't re-render it
-  (Red A).
+  (Red A) — including a run of them back to back, and including a slice
+  the badge never selects (Red A2, Red A3).
 - Unmounting a widget removes its subscription — `listenerCount()`
   returns to 0 (Red B).
-- Updating one slice preserves the others (Red C).
-- A change that *does* affect the badge still updates it (guard).
+- The subscriber list stays at one per widget across re-renders:
+  re-subscribing on every render grows it just as surely as never
+  unsubscribing (Red B2).
+- Every widget on the page unsubscribes, not only the badge — mounting
+  the whole page and unmounting it returns the count to 0 (Red B3).
+- Updating one slice preserves the others, in both directions: bumping
+  the counter keeps the items, adding an item keeps the counter
+  (Red C, Red C2).
+- An empty partial changes nothing (Red C3).
+- A change that _does_ affect the badge still updates it (guard).
 - Don't defeat A by freezing the badge so it stops updating. Research
   topics: selector granularity and referential stability in external
   stores, `useSyncExternalStore` and selector equality, effect cleanup
