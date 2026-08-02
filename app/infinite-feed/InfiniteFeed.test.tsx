@@ -80,6 +80,74 @@ describe("InfiniteFeed", () => {
         expect(getFetchLog()).toEqual(["0", "1"]);
     });
 
+    it("releases the latch so the next burst still advances", async () => {
+        render(<InfiniteFeed />);
+
+        act(() => {
+            fireIntersect();
+            fireIntersect();
+            fireIntersect();
+        });
+        await settle();
+        expect(getFetchLog()).toEqual(["0"]);
+
+        // Swallowing every repeat is not a fix — the latch has to open
+        // again once the page has landed.
+        act(() => {
+            fireIntersect();
+            fireIntersect();
+        });
+        await settle();
+        expect(getFetchLog()).toEqual(["0", "1"]);
+
+        act(() => {
+            fireIntersect();
+        });
+        await settle();
+        expect(getFetchLog()).toEqual(["0", "1", "2"]);
+        expect(screen.getAllByTestId("feed-item")).toHaveLength(15);
+    });
+
+    it("anchors the scroll across repeated prepends", async () => {
+        render(<InfiniteFeed />);
+
+        act(() => {
+            fireIntersect();
+        });
+        await settle();
+
+        const scroller = screen.getByTestId("feed-scroller");
+        scroller.scrollTop = 200;
+
+        fireEvent.click(screen.getByRole("button", { name: "Load previous" }));
+        await settle();
+        expect(scroller.scrollTop).toBe(400);
+        expect(screen.getAllByTestId("feed-item")[0]).toHaveTextContent(
+            "Older -1\u00b70"
+        );
+
+        // The second prepend has to shift by its own height too, from
+        // wherever the first one left the reader.
+        fireEvent.click(screen.getByRole("button", { name: "Load previous" }));
+        await settle();
+        expect(scroller.scrollTop).toBe(600);
+        expect(screen.getAllByTestId("feed-item")[0]).toHaveTextContent(
+            "Older -2\u00b70"
+        );
+        expect(getFetchLog()).toEqual(["0", "prev--1", "prev--2"]);
+    });
+
+    it("disconnects the observer when the feed unmounts", async () => {
+        const { unmount } = render(<InfiniteFeed />);
+        expect(FakeIntersectionObserver.instances).toHaveLength(1);
+
+        unmount();
+
+        // An observer that outlives the feed keeps calling into a tree
+        // React has already thrown away.
+        expect(FakeIntersectionObserver.instances[0].disconnected).toBe(true);
+    });
+
     it("preserves scroll position when older items are prepended", async () => {
         render(<InfiniteFeed />);
 
