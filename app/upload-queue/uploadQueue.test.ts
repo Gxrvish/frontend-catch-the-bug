@@ -73,6 +73,61 @@ describe("uploadQueue", () => {
         ).toHaveLength(4);
     });
 
+    it("does not upload a file cancelled while it was still queued", async () => {
+        const queue = startQueue(FILES);
+
+        // With a pool of two, "e.png" has not been handed to the
+        // transport yet.
+        queue.cancel("e.png");
+
+        await drive();
+        await queue.done.catch(() => undefined);
+
+        expect(queue.status("e.png")).toBe("cancelled");
+        expect(
+            FILES.filter((file) => queue.status(file) === "done")
+        ).toHaveLength(4);
+    });
+
+    it("finishes when one file is cancelled and another fails", async () => {
+        const queue = startQueue(FILES);
+        const settled = queue.done.then(
+            () => "resolved",
+            () => "rejected"
+        );
+
+        queue.cancel("b.png");
+        await drive(["d.png"]);
+
+        expect(await settled).toBe("resolved");
+        expect(queue.status("b.png")).toBe("cancelled");
+        expect(queue.status("d.png")).toBe("failed");
+        expect(
+            FILES.filter((file) => queue.status(file) === "done")
+        ).toHaveLength(3);
+    });
+
+    it("resolves even if every upload fails", async () => {
+        const queue = startQueue(FILES);
+        const settled = queue.done.then(
+            () => "resolved",
+            () => "rejected"
+        );
+
+        await drive(FILES);
+
+        // A queue that rejects on the first failure never reports the
+        // rest.
+        expect(await settled).toBe("resolved");
+        expect(Object.values(queue.statuses())).toEqual([
+            "failed",
+            "failed",
+            "failed",
+            "failed",
+            "failed",
+        ]);
+    });
+
     it("uploads every file on the happy path", async () => {
         const queue = startQueue(FILES);
 
