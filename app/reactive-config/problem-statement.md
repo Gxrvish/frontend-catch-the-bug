@@ -45,8 +45,11 @@ object it directly wraps:
 ## Requirements for the Fix
 
 - Writing a nested field (`theme.color`) fires the change listener and
-  the write lands (Red A).
-- Deleting a key fires the change listener with the key name (Red B).
+  the write lands (Red A) — at any depth, and **exactly once** per write.
+  Wrapping that fires twice is its own bug (Red A2, Red A3).
+- Mutating an array value is tracked too (Red A4).
+- Deleting a key fires the change listener with the key name (Red B),
+  including a key nested inside a branch (Red B2).
 - A top-level write still notifies exactly once (guard).
 - Research topics: Proxy trap coverage (`get`/`set`/`deleteProperty`),
   `Reflect` as the forwarding layer, and how Vue's `reactive()` handles
