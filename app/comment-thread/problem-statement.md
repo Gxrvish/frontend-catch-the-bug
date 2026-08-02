@@ -51,6 +51,15 @@ you write and becomes the default.
 
 - A moderation-rejected comment must vanish from the thread once the error
   banner appears — encoded in `CommentThread.test.tsx`.
+- The comment must still appear **immediately** on post. Waiting for the
+  server before showing anything also passes the rollback test, and
+  throws the feature away.
+- A rejection rolls back exactly that post: earlier comments survive, and
+  when three are in flight and the middle one is rejected, the other two
+  land once each.
+- After a rejection the thread recovers — the banner clears and the next
+  post goes through.
+- An empty or whitespace-only draft posts nothing.
 - A successful post must show the comment exactly once, with no error
   banner (also encoded).
 - Use the React 19 primitive rather than hand-rolled removal — the lesson
