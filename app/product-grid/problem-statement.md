@@ -35,14 +35,18 @@ whatever product happens to land at the same grid position.
 ## Root Cause Summary
 
 React reconciles list children by their identity within the list. The grid gives
-React an identity signal that describes a card's *position*, not the *product* it
+React an identity signal that describes a card's _position_, not the _product_ it
 renders — so when the order changes, React matches old state to new props by
 position and happily hands one product's state to another.
 
 ## Requirements for the Fix
 
 - Quantity and "Added ✓" must stay attached to their product across any
-  re-sort or filter change (`ProductGrid.test.tsx` encodes this).
+  re-sort or filter change (`ProductGrid.test.tsx` encodes this) — the
+  **category filter** is its own path, and so is a sort that is later
+  undone: the intermediate order has to be right too, not just the round
+  trip.
+- The grid still renders every product in the chosen order.
 - Do not lift the per-card state into the parent or a store — the fix is a
-  one-line change. Understand *why* it works: read up on how React keys drive
+  one-line change. Understand _why_ it works: read up on how React keys drive
   reconciliation and when component state is preserved vs. destroyed.
