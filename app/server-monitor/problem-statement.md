@@ -38,7 +38,7 @@ the mount render, not live bindings into React state.
 - Ticket A: every tick computes `0 + 1`. There's a form of `setState`
   that doesn't need to read the current value from the closure at all —
   React hands it to you.
-- Ticket B: the keydown handler needs the *latest* selection. Either the
+- Ticket B: the keydown handler needs the _latest_ selection. Either the
   registration must follow the selection (what would the dependency array
   look like then, and what does the cleanup do between registrations?),
   or the handler needs an escape hatch that always points at the latest
@@ -47,8 +47,12 @@ the mount render, not live bindings into React state.
 ## Requirements for the Fix
 
 - Uptime must keep counting: ≥2 after ~0.6s at the 200ms demo tick (Red
-  A).
-- The hotkey must refresh whatever is selected *now* (Red B).
+  A) — and keep counting across a selection change, which must neither
+  restart nor stall the clock (Red A2).
+- The hotkey must refresh whatever is selected _now_ (Red B), every time,
+  through a run of selections (Red B2).
+- Other keys are still ignored, and nothing is left listening after
+  unmount — re-subscribing per selection must still clean up (Red B3).
 - Server list, selection highlight, and the on-screen refresh button keep
   working (guard).
 - Don't fix Ticket B by moving the listener onto a DOM element with
