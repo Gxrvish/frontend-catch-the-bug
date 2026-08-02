@@ -41,7 +41,7 @@ reproducible breaks replay, time-travel debugging, and StrictMode.
 
 - **A:** `addItem` does `state.items.push(item)` and returns
   `{ ...state }`. The spread makes a new top-level object, but `items` is
-  the *same array reference* — so `useMemo(..., [order.items])` sees an
+  the _same array reference_ — so `useMemo(..., [order.items])` sees an
   unchanged dependency and returns the stale subtotal. The list rendered
   fine only because it reads the mutated array directly. Nested updates
   must be immutable too: build a new array (`[...state.items, item]`),
@@ -54,14 +54,21 @@ reproducible breaks replay, time-travel debugging, and StrictMode.
   `pay` case, so it isn't a pure function of `(state, action)` — the same
   inputs yield different outputs. Non-determinism inside a reducer breaks
   action replay and is exactly what React's StrictMode double-invoke is
-  designed to surface. The id must come *in* (via the action payload) or
+  designed to surface. The id must come _in_ (via the action payload) or
   be derived deterministically from state.
 
 ## Requirements for the Fix
 
-- Adding an item updates the subtotal (Red A).
-- Paying from `cart` is rejected; the status stays `cart` (Red B).
-- The reducer is pure — same `(state, action)` ⇒ same result (Red C).
+- Adding an item updates the subtotal (Red A), and keeps updating it on
+  the second and third add (Red A2).
+- Paying from `cart` is rejected; the status stays `cart` (Red B) — and
+  paying from `done` is rejected too, or a finished order gets charged
+  twice (Red B2).
+- The reducer is pure — same `(state, action)` ⇒ same result (Red C) —
+  and it never writes to the state it was handed: the tests freeze it, so
+  an in-place `push` throws (Red C2).
+- `reset` hands back a cart that shares nothing with the old one
+  (Red C3).
 - A legal `cart → review → pay` flow reaches `done` with an order id
   (guard).
 - Keep the reducer a pure function; do transitions immutably; guard
