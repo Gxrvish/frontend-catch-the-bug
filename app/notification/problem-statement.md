@@ -46,4 +46,10 @@ The polling merge flow can overwrite an in-flight optimistic read state with a s
 
 - Keep server data authoritative in steady state.
 - Respect in-flight optimistic read updates to prevent flicker.
+- Hold back **only** the read flag: an item with a mutation in flight
+  still takes the server's title, message and timestamps.
+- Keep the batch working while one id is pending — ordering stays
+  newest-first and new notifications still arrive.
+- The unread badge and the unread/read filters read the same list, so
+  `countUnread` and `applyFilters` have to agree with what the row shows.
 - Make a minimal, targeted change without redesigning the whole data flow.
