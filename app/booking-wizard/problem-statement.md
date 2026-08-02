@@ -38,7 +38,7 @@ same rhythm.
 ## Root Cause Summary
 
 React decides whether to keep or destroy a subtree by comparing the element
-*type* at each position between renders. If the type it sees on this render is
+_type_ at each position between renders. If the type it sees on this render is
 not (`===`) the type from the last render, React unmounts the old subtree —
 DOM nodes, focus, state, everything — and mounts a fresh one. Ask yourself
 what value the wizard passes as the element type for the current step, and
@@ -48,6 +48,17 @@ whether that value survives a re-render of the wizard.
 
 - Typing a full name in one go must work; the field keeps focus the whole
   time (encoded in `BookingWizard.test.tsx`).
+- The input **element itself** must survive a keystroke — the same DOM
+  node before and after. Restoring focus by hand from an effect papers
+  over the remount and still loses selection, IME composition and scroll
+  position.
+- Every step is built the same way, so every step has to hold: the
+  stay-date inputs and the guest-count select survive being edited, not
+  only the field the ticket names.
+- Coming back to a step and carrying on typing behaves the same as never
+  having left it.
+- Re-rendering the review step (the confirmation arriving) must not
+  rebuild it.
 - Entered details must still reach the review step (also encoded).
 - Do not switch inputs to uncontrolled or move wizard state into a store —
   the fix is structural and small. Research topics: React element type
