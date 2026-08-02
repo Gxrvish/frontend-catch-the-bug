@@ -41,8 +41,14 @@ the crash happens before the UI can offer anything.
 
 ## Requirements for the Fix
 
-- Settings round-trip through storage intact (Red A).
-- A corrupt stored value loads as defaults without throwing (Red B).
+- Settings round-trip through storage intact (Red A) — what lands in
+  storage is a string the next load can actually parse, and a second save
+  overwrites the first (Red A2).
+- A corrupt stored value loads as defaults without throwing (Red B) —
+  and "corrupt" is not only unparseable text: `null`, a number, a bare
+  string and an array are all valid JSON and none of them is a Settings.
+  A half-written record must not leave a hole in the result (Red B2).
+- Saving over a corrupt value gets the cache working again (Red B3).
 - An empty store still yields defaults (guard).
 - Research topics: `Storage.setItem` string coercion, treating storage
   as untrusted input (guarded parse + schema fallback), and
