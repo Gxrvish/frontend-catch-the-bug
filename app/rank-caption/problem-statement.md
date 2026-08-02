@@ -10,7 +10,7 @@ both are the platform already solving a problem the code re-solved badly.
 ## Ticket A — "21th place"
 
 Every rank past 20 that ends in 1, 2, or 3 is wrong: **21th, 22th,
-23th** — while 11, 12, 13 are correctly *11th* (by accident). English
+23th** — while 11, 12, 13 are correctly _11th_ (by accident). English
 ordinal suffixes follow the last digit, except the teens. The current
 code special-cases exactly the numbers 1, 2, and 3 and nothing else.
 
@@ -40,8 +40,12 @@ Both fixes are the same discovery: **the platform ships this logic.**
 
 ## Requirements for the Fix
 
-- 21st / 22nd / 23rd, and 11th / 12th / 13th / 111th (Red A).
-- A match two days in the past reads "2 days ago" (Red B).
+- 21st / 22nd / 23rd, and 11th / 12th / 13th / 111th (Red A) — and the
+  rule keeps going: 101st, 102nd, 103rd, 112th, 113th, 121st (Red A2).
+- A match two days in the past reads "2 days ago" (Red B) — with the
+  grammar to match. Flipping the sign by hand fixes the wording and
+  leaves "1 days ago" behind: a single day is "1 day ago" / "in 1 day",
+  and today is "in 0 days" (Red B2).
 - 1st, 4th, and "in 2 days" still hold (guard).
 - Research topics: `Intl.PluralRules` with `type: "ordinal"`,
   `Intl.RelativeTimeFormat`, and why teens break last-digit suffix rules.
