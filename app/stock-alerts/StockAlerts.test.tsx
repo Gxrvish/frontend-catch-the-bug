@@ -2,7 +2,12 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { _resetPriceFeed, getConnectCount } from "./priceFeed";
+import { FeedPanel } from "./FeedPanel";
+import {
+    _resetPriceFeed,
+    getConnectCount,
+    getDisconnectCount,
+} from "./priceFeed";
 import { StockAlerts } from "./StockAlerts";
 
 const waitMs = async (ms: number) => {
@@ -35,6 +40,53 @@ describe("StockAlerts", () => {
 
         expect(screen.getAllByTestId("alert-row").length).toBeGreaterThan(0);
         expect(getConnectCount()).toBe(1);
+    });
+
+    it("keeps alerts flowing while filtering, with no churn", async () => {
+        render(<StockAlerts />);
+        await waitMs(150);
+        const early = screen.getAllByTestId("alert-row").length;
+
+        fireEvent.change(screen.getByLabelText("filter symbols"), {
+            target: { value: "MS" },
+        });
+        await waitMs(250);
+
+        // A reconnect would also keep the ticks coming — by restarting
+        // the script and paying for another connection.
+        expect(getConnectCount()).toBe(1);
+        expect(getDisconnectCount()).toBe(0);
+        expect(screen.getAllByTestId("alert-row").length).toBeGreaterThan(
+            early - 1
+        );
+    });
+
+    it("still reconnects when the watched symbols really change", async () => {
+        const view = render(<StockAlerts />);
+        await waitMs(150);
+
+        fireEvent.change(screen.getByLabelText("filter symbols"), {
+            target: { value: "NV" },
+        });
+        expect(getConnectCount()).toBe(1);
+
+        view.unmount();
+        expect(getDisconnectCount()).toBe(1);
+
+        // Stability is not deafness: a genuinely different config still
+        // has to re-subscribe.
+        const onAlert = () => {};
+        const first = { symbols: ["AAPL"] };
+        const panel = render(<FeedPanel options={first} onAlert={onAlert} />);
+        expect(getConnectCount()).toBe(2);
+
+        panel.rerender(<FeedPanel options={first} onAlert={onAlert} />);
+        expect(getConnectCount()).toBe(2);
+
+        panel.rerender(
+            <FeedPanel options={{ symbols: ["MSFT"] }} onAlert={onAlert} />
+        );
+        expect(getConnectCount()).toBe(3);
     });
 
     it("shows tick prices and filters the watchlist", async () => {
