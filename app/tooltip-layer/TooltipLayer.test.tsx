@@ -40,6 +40,36 @@ describe("TooltipLayer", () => {
         expect(ops.indexOf("write")).toBeGreaterThan(ops.lastIndexOf("read"));
     });
 
+    it("stacks the badges where the measurements say", () => {
+        render(<TooltipLayer />);
+        _clearOps();
+
+        fireEvent.click(screen.getByRole("button", { name: /re-measure/i }));
+
+        // Batching the reads must not change the answer: 20px tall with a
+        // 4px gap.
+        expect(
+            screen.getAllByTestId("badge").map((badge) => badge.style.top)
+        ).toEqual(["0px", "24px", "48px", "72px"]);
+        const ops = getOps();
+        expect(ops.indexOf("write")).toBeGreaterThan(ops.lastIndexOf("read"));
+    });
+
+    it("keeps the batching on a second re-measure", () => {
+        render(<TooltipLayer />);
+
+        fireEvent.click(screen.getByRole("button", { name: /re-measure/i }));
+        _clearOps();
+        fireEvent.click(screen.getByRole("button", { name: /re-measure/i }));
+
+        const ops = getOps();
+        expect(ops).toHaveLength(8);
+        expect(ops.indexOf("write")).toBeGreaterThan(ops.lastIndexOf("read"));
+        expect(
+            screen.getAllByTestId("badge").map((badge) => badge.style.top)
+        ).toEqual(["0px", "24px", "48px", "72px"]);
+    });
+
     it("renders the tooltip text and every badge", () => {
         render(<TooltipLayer />);
 
