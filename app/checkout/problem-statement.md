@@ -51,9 +51,18 @@ Open `/checkout` — deterministic, no timing. Follow the scenarios above.
 
 - Applying a valid coupon must update the total immediately
   (`Checkout.test.tsx` encodes this).
-- Typing a gift note must NOT re-render the Order Summary (also encoded).
+- The coupon has to land whatever else happened first — after a quantity
+  change, and with the discount still there when shipping changes
+  afterwards. An unknown code changes nothing, and a valid one entered
+  after it still applies.
+- Typing a gift note must NOT re-render the Order Summary (also encoded)
+  — and the summary must still re-render when its own inputs move.
+  Deleting the render probe is not a repair.
+- The shield has to hold once the cart has moved on, not only for the
+  value the provider first rendered with.
 - Cart items, coupon, and shipping must remain shared state usable by any
-  checkout section.
+  checkout section, and the gift note must survive pricing churn — it is
+  cart state, not scratch state inside the input.
 - Topics worth researching: `useMemo`/`useCallback` dependency arrays, why
   `memo()` cannot block context updates, stabilizing context values, and
   splitting one context into several (state vs. actions, related vs. unrelated
