@@ -38,6 +38,36 @@ describe("offline notes", () => {
         expect(notes).toHaveLength(2);
     });
 
+    it("still trims the note before it is stored", async () => {
+        await saveNote("   Buy milk   ");
+
+        // Dodging the transaction problem by dropping the normalisation
+        // is not a fix.
+        expect(_dumpNotes().map((row) => row.text)).toEqual(["Buy milk"]);
+    });
+
+    it("keeps the index query correct after new saves", async () => {
+        _seedNote({ id: 1, text: "Pinned", pinned: true });
+        await saveNote("Fresh");
+
+        const pinned = await getPinnedNotes();
+        const all = await getAllNotes();
+
+        expect(pinned.map((row) => row.text)).toEqual(["Pinned"]);
+        expect(all.map((row) => row.text)).toEqual(["Pinned", "Fresh"]);
+    });
+
+    it("gives each saved note its own id, and reads an empty store", async () => {
+        expect(await getAllNotes()).toEqual([]);
+        expect(await getPinnedNotes()).toEqual([]);
+
+        await saveNote("one");
+        await saveNote("two");
+
+        const ids = _dumpNotes().map((row) => row.id);
+        expect(new Set(ids).size).toBe(2);
+    });
+
     it("round-trips two notes in insertion order", async () => {
         await saveNote("first");
         await saveNote("second");
