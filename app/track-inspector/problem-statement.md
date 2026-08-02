@@ -3,7 +3,7 @@
 ## Context
 
 The catalog team's internal tool lists tracks on the left and shows an edit
-panel on the right. The panel keeps an editable *draft* of the selected track
+panel on the right. The panel keeps an editable _draft_ of the selected track
 so curators can tweak title, BPM and the explicit flag, then commit with
 **Save changes**. Drafts must not touch the library until saved.
 
@@ -15,7 +15,7 @@ saved — and overwrote the wrong song's metadata in production."
 
 The edit panel does not follow the selection. Clicking a different track
 updates the header line (artist and track id) but every form field keeps
-showing the *previously* selected track's draft. Saving then writes one
+showing the _previously_ selected track's draft. Saving then writes one
 track's values under another track's id.
 
 ## Failure Scenario
@@ -37,10 +37,10 @@ track's values under another track's id.
 ## Root Cause Summary
 
 `useState(initialValue)` uses its argument exactly once — on the first render
-of that component *instance*. On every later render the argument is computed
+of that component _instance_. On every later render the argument is computed
 and thrown away; the state keeps whatever it already held. The panel derives
 its draft from a prop and expects the derivation to re-run when the prop
-changes. It never will — unless React is told this is a *different* edit
+changes. It never will — unless React is told this is a _different_ edit
 session that deserves a fresh instance.
 
 ## Requirements for the Fix
@@ -49,6 +49,13 @@ session that deserves a fresh instance.
   (`TrackInspector.test.tsx` encodes this).
 - Draft behavior must survive: edits stay local until **Save changes**
   (also encoded — don't turn the form into a direct library editor).
+- An uncommitted draft is **discarded** when the selection moves on:
+  coming back is a fresh edit of the stored track, not a resumed draft
+  nobody saved.
+- Saving writes only into the selected track, and only the fields the
+  form shows — the previously selected track is untouched, and the
+  selected track's other fields survive.
+- Saved values show up again after switching away and back.
 - Avoid syncing props to state with a `useEffect` — there is a cleaner,
   officially recommended pattern. Research topics: "You Might Not Need an
   Effect" (react.dev), resetting component state with a `key`, why state
