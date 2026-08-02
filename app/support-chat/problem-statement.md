@@ -22,7 +22,7 @@ QA at a messaging-scale company filed two tickets:
 ### A. Scroll lands short on send
 
 1. Type a message and hit **Send**.
-2. The pane scrolls — but to the bottom of the *previous* content height.
+2. The pane scrolls — but to the bottom of the _previous_ content height.
 3. The just-sent message is below the fold.
 
 ### B. Reader gets yanked, pill never shows
@@ -53,10 +53,15 @@ Two distinct React timing mistakes:
 
 ## Requirements for the Fix
 
-- After sending, the pane must rest exactly at the bottom of the *new* content
+- After sending, the pane must rest exactly at the bottom of the _new_ content
   (`ChatPane.test.tsx` encodes this).
 - Incoming messages must respect the user's live scroll position: no yank when
-  scrolled up, and the unseen counter must increment (also encoded in the test).
+  scrolled up, and the unseen counter must increment (also encoded in the test)
+  — counting **each** message, clearing when the user scrolls back down, and
+  resuming auto-scroll from there.
+- The unseen pill jumps to the latest and clears the count.
+- Sending several messages in a row keeps the pane pinned each time, and an
+  empty message adds nothing.
 - Keep a single socket connection for the lifetime of the pane — reconnecting
   per render or per scroll is not acceptable.
 - Topics worth researching: automatic batching, `useEffect` vs `useLayoutEffect`
