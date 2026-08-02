@@ -31,6 +31,54 @@ describe("SketchPad", () => {
         expect(kindsOnCanvas()).toEqual(["circle"]);
     });
 
+    it("walks the whole history back and forward", () => {
+        render(<SketchPad />);
+        const add = (kind: string) =>
+            fireEvent.click(
+                screen.getByRole("button", { name: `Add ${kind}` })
+            );
+        const undo = () =>
+            fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+        const redo = () =>
+            fireEvent.click(screen.getByRole("button", { name: "Redo" }));
+
+        add("square");
+        add("circle");
+        add("triangle");
+
+        undo();
+        expect(kindsOnCanvas()).toEqual(["square", "circle"]);
+        undo();
+        expect(kindsOnCanvas()).toEqual(["square"]);
+        undo();
+        expect(kindsOnCanvas()).toEqual([]);
+
+        redo();
+        redo();
+        redo();
+        expect(kindsOnCanvas()).toEqual(["square", "circle", "triangle"]);
+    });
+
+    it("ignores undo past the beginning and redo past the end", () => {
+        render(<SketchPad />);
+        const undo = () =>
+            fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+        const redo = () =>
+            fireEvent.click(screen.getByRole("button", { name: "Redo" }));
+
+        undo();
+        expect(kindsOnCanvas()).toEqual([]);
+
+        fireEvent.click(screen.getByRole("button", { name: "Add square" }));
+        undo();
+        undo();
+        expect(kindsOnCanvas()).toEqual([]);
+
+        redo();
+        redo();
+        expect(kindsOnCanvas()).toEqual(["square"]);
+    });
+
     it("adds shapes to the canvas in order", () => {
         render(<SketchPad />);
 

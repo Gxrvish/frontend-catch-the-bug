@@ -11,7 +11,7 @@ history entirely.
 ## Ticket A — "Undo does nothing"
 
 Add two shapes, hit Undo — both shapes stay. The history stack has the
-right *number* of entries, but stepping back never changes the canvas.
+right _number_ of entries, but stepping back never changes the canvas.
 Inspecting the stack in devtools shows something eerie: **every entry
 holds the same, current drawing.** The past keeps rewriting itself.
 
@@ -28,7 +28,7 @@ moment the user branched off; a correct history discards it.
 
 ## Root Cause Hints
 
-- **A:** read `addShape` line by line and ask *what exactly* got pushed
+- **A:** read `addShape` line by line and ask _what exactly_ got pushed
   onto the history. Not a copy — the **live array object**. The very next
   line mutates that same object (`shapes.push(...)`), which means it
   mutates the "snapshot" too; the spread into `setShapes` launders the
@@ -38,7 +38,7 @@ moment the user branched off; a correct history discards it.
   frozen in time, which in JavaScript means: never mutate, always derive
   new arrays (`[...shapes, newShape]`), so old references stay pristine.
 - **B:** the comment celebrates keeping the redo stack "after branching"
-  — that's precisely the bug. Undo/redo is a *linear* timeline: the redo
+  — that's precisely the bug. Undo/redo is a _linear_ timeline: the redo
   stack is only valid while you walk straight back and forth. The moment
   a **new edit** happens after an undo, the old future describes a
   drawing that no longer follows from the present. Standard discipline:
@@ -46,11 +46,15 @@ moment the user branched off; a correct history discards it.
 
 ## Requirements for the Fix
 
-- Undo restores the exact prior canvas (Red A).
+- Undo restores the exact prior canvas (Red A) — all the way back
+  through a deep history, and redo walks the same path forward again in
+  order (Red A2).
 - A new edit after undo invalidates redo (Red B).
+- Undo past the beginning and redo past the end do nothing, and do not
+  throw (Red C).
 - Adding shapes still renders them in order (guard).
-- Keep the two-stack design — fix what gets *stored* (immutable
-  snapshots) and *when redo is cleared*. Research topics: immutability
+- Keep the two-stack design — fix what gets _stored_ (immutable
+  snapshots) and _when redo is cleared_. Research topics: immutability
   and reference aliasing, why React state must never be mutated even
   when you `setState` a copy afterwards, undo/redo stack discipline, the
   command pattern, structural sharing / Immer.
