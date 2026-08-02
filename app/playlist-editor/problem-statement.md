@@ -13,7 +13,7 @@ company.
 A listener typed "skip the intro" on **Neon Harbor**, hit **Sort by
 duration**, and the note now sits under **Coastline Repeater** — a song
 they've never annotated. Same for star ratings: they stay glued to the
-*row slot*, not the *song*. Toggling "Hide tracks under 3 minutes" scrambles
+_row slot_, not the _song_. Toggling "Hide tracks under 3 minutes" scrambles
 them again.
 
 ### Failure Scenario (A)
@@ -25,7 +25,7 @@ them again.
 ### Root Cause Hint (A)
 
 React's diffing matches list children by `key` to decide which component
-instances survive a re-render — and state lives on the *instance*, not on
+instances survive a re-render — and state lives on the _instance_, not on
 the data you passed in. Look at what this list uses as a key, and ask what
 that value identifies after the array is reordered or filtered. The comment
 above the `map` is technically true and completely beside the point.
@@ -43,16 +43,21 @@ sum of the original eight tracks forever.
 
 ### Root Cause Hint (B)
 
-The total is memoized. A memo is a contract: "recompute me when *these*
+The total is memoized. A memo is a contract: "recompute me when _these_
 values change." Read the dependency list and ask whether the contract
-matches the comment above it — the library *does* change during a session
+matches the comment above it — the library _does_ change during a session
 now that rows have a Remove button.
 
 ## Requirements for the Fix
 
 - A note/rating typed on a track must follow that track through sorting and
-  filtering — encoded in `PlaylistEditor.test.tsx` (Ticket A test).
-- Removing a track must update the total runtime (Ticket B test).
+  filtering — encoded in `PlaylistEditor.test.tsx` (Ticket A test). The
+  filter is a separate path from the sort and is tested separately.
+- Removing a row takes that row's state with it and leaves its
+  neighbours' alone.
+- Removing a track must update the total runtime (Ticket B test), while
+  hiding rows must not — filtering is a view concern, the playlist is
+  still the same length.
 - The seeded playlist must still render in order with the correct initial
   total (guard test).
 - Don't lift the notes into a parent map keyed by track id just to dodge
