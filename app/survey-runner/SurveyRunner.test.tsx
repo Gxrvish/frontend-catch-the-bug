@@ -37,6 +37,44 @@ describe("SurveyRunner", () => {
         expect(getBuildCount()).toBe(1);
     });
 
+    it("records one event per answer across several answers", () => {
+        render(
+            <StrictMode>
+                <SurveyRunner />
+            </StrictMode>
+        );
+
+        fireEvent.click(screen.getByRole("button", { name: "Bike" }));
+        fireEvent.click(screen.getByRole("button", { name: "Morning" }));
+        // Changing an answer is another answer.
+        fireEvent.click(screen.getByRole("button", { name: "Transit" }));
+
+        expect(getAnalyticsLog()).toEqual([
+            "q-commute",
+            "q-focus",
+            "q-commute",
+        ]);
+    });
+
+    it("does not rebuild the index once it is mounted", () => {
+        render(
+            <StrictMode>
+                <SurveyRunner />
+            </StrictMode>
+        );
+        // StrictMode double-invokes the initializer on purpose; what
+        // matters is that nothing after mount pays for it again.
+        const afterMount = getBuildCount();
+
+        fireEvent.click(screen.getByRole("button", { name: "Bike" }));
+        fireEvent.click(screen.getByRole("button", { name: "Morning" }));
+        fireEvent.change(screen.getByLabelText("notes"), {
+            target: { value: "hello" },
+        });
+
+        expect(getBuildCount()).toBe(afterMount);
+    });
+
     it("renders questions, marks answers, and summarizes them", () => {
         render(<SurveyRunner />);
 
