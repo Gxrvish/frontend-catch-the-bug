@@ -9,7 +9,7 @@ billing-scale company. Different symptoms, one disease.
 ## Ticket A — "A $20.00 cart doesn't get free shipping"
 
 Free shipping starts at $20. A customer's cart — $1.60 + $8.95 + $5.50 +
-$3.95 — is *exactly* $20.00, and the banner says no. Finance re-added it
+$3.95 — is _exactly_ $20.00, and the banner says no. Finance re-added it
 on a calculator three times. The code says the total is
 `19.999999999999996`.
 
@@ -32,7 +32,7 @@ not one-tenth; it's the nearest binary fraction. Money math in floats
 inherits that error:
 
 - **A:** each price is already slightly off, and `reduce(+)` accumulates
-  the error — four exact-cents prices sum to just *below* 20, and
+  the error — four exact-cents prices sum to just _below_ 20, and
   `>= 20` misses. Comparing money in floats compares noise.
 - **B:** `2.67 * 1.5` in binary is a hair **under** 4.005, so
   `toFixed(2)` — which rounds what the float actually is, not what the
@@ -44,7 +44,13 @@ inherits that error:
 ## Requirements for the Fix
 
 - A cart worth exactly the threshold qualifies for free shipping (Red A).
-- $2.67 × 1.5 prints as 4.01 (Red B).
+- `invoiceTotal` of that same cart **is** 20, and ten dimes are 1.
+  Loosening the `>=` comparison hides the symptom and leaves the total
+  itself wrong on every invoice that prints it (Red A2).
+- The threshold stays sharp in both directions: an empty cart and a
+  $19.99 cart do not qualify; $20.00 and $20.01 do (Red A3).
+- $2.67 × 1.5 prints as 4.01 (Red B) — without nudging the line totals
+  that were already right, like $19.99 × 3 = 59.97 (Red B2).
 - Whole-dollar lines still total exactly (guard).
 - Research topics: IEEE-754 binary floating point vs decimal fractions,
   why `0.1 + 0.2 !== 0.3`, `toFixed` rounding on inexact values, and
