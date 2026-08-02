@@ -21,6 +21,23 @@ describe("captions", () => {
         expect(relativeDays(NOW - 2 * DAY_MS, NOW)).toBe("2 days ago");
     });
 
+    it("keeps the rule going past 100", () => {
+        expect(ordinal(101)).toBe("101st");
+        expect(ordinal(102)).toBe("102nd");
+        expect(ordinal(103)).toBe("103rd");
+        expect(ordinal(112)).toBe("112th");
+        expect(ordinal(113)).toBe("113th");
+        expect(ordinal(121)).toBe("121st");
+    });
+
+    it("gets the day plural right in both directions", () => {
+        // Flipping the sign by hand fixes the wording and leaves the
+        // grammar behind.
+        expect(relativeDays(NOW - DAY_MS, NOW)).toBe("1 day ago");
+        expect(relativeDays(NOW + DAY_MS, NOW)).toBe("in 1 day");
+        expect(relativeDays(NOW, NOW)).toBe("in 0 days");
+    });
+
     it("keeps the basics right", () => {
         expect(ordinal(1)).toBe("1st");
         expect(ordinal(4)).toBe("4th");
