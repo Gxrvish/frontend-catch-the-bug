@@ -67,4 +67,70 @@ describe("ChatPane", () => {
         // ...and the unseen pill must appear instead.
         expect(screen.getByText(/1 new message/)).toBeInTheDocument();
     });
+
+    it("counts several unseen messages and clears them on the way back down", () => {
+        render(<ChatPane autoAgentReplies={false} />);
+        const scroller = screen.getByTestId("chat-scroller");
+        mockScrollGeometry(scroller);
+
+        scroller.scrollTop = 0;
+        fireEvent.scroll(scroller);
+
+        act(() => {
+            emitAgentMessage("one");
+            emitAgentMessage("two");
+            emitAgentMessage("three");
+        });
+
+        expect(scroller.scrollTop).toBe(0);
+        expect(screen.getByText(/3 new messages/)).toBeInTheDocument();
+
+        // Scrolling back to the bottom acknowledges them…
+        scroller.scrollTop = scroller.scrollHeight - scroller.clientHeight;
+        fireEvent.scroll(scroller);
+        expect(screen.queryByText(/new message/)).not.toBeInTheDocument();
+
+        // …and auto-scroll resumes from there.
+        act(() => {
+            emitAgentMessage("four");
+        });
+        expect(scroller.scrollTop).toBe(scroller.scrollHeight);
+        expect(screen.queryByText(/new message/)).not.toBeInTheDocument();
+    });
+
+    it("jumps to the latest from the unseen pill", () => {
+        render(<ChatPane autoAgentReplies={false} />);
+        const scroller = screen.getByTestId("chat-scroller");
+        mockScrollGeometry(scroller);
+
+        scroller.scrollTop = 0;
+        fireEvent.scroll(scroller);
+        act(() => {
+            emitAgentMessage("hello again");
+        });
+
+        fireEvent.click(screen.getByText(/1 new message/));
+
+        expect(scroller.scrollTop).toBe(scroller.scrollHeight);
+        expect(screen.queryByText(/new message/)).not.toBeInTheDocument();
+    });
+
+    it("sends several messages and stays pinned to the bottom", () => {
+        render(<ChatPane autoAgentReplies={false} />);
+        const scroller = screen.getByTestId("chat-scroller");
+        mockScrollGeometry(scroller);
+        const input = screen.getByPlaceholderText("Type a message...");
+
+        for (const text of ["first", "second", "third"]) {
+            fireEvent.change(input, { target: { value: text } });
+            fireEvent.click(screen.getByText("Send"));
+            expect(scroller.scrollTop).toBe(scroller.scrollHeight);
+        }
+
+        // An empty message adds nothing and moves nothing.
+        const before = scroller.scrollHeight;
+        fireEvent.change(input, { target: { value: "   " } });
+        fireEvent.click(screen.getByText("Send"));
+        expect(scroller.scrollHeight).toBe(before);
+    });
 });
