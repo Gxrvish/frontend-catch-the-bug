@@ -47,6 +47,14 @@ inside the render itself.
 
 - Picking a city must show its forecast once the request lands — encoded in
   `CityWeather.test.tsx`.
+- One click must produce **one** gateway request. Retrying until a render
+  happens to land is not the same as satisfying the contract, and the
+  request count is what the ticket is actually about.
+- Whatever survives the render has to be keyed by the city: picking a
+  second city shows the second city's forecast, not the first one's.
+- Switching to a city that is not loaded yet shows the skeleton again,
+  and clears it when the forecast arrives.
+- Returning to a city already loaded does not re-request it.
 - The picker and the skeleton-while-loading behavior must keep working
   (also encoded).
 - Keep `use()` + Suspense — the fix is to satisfy their contract, not to
