@@ -13,12 +13,12 @@ returned an article the client already had, and React quietly dropped the
 duplicate. Worse: because the page window shifted, the story at the far end
 **never loads at all**. Users get nine stories instead of ten and the
 missing one is unreachable. It reproduces every time a story is published
-between two page loads, which at our volume is *constantly*."
+between two page loads, which at our volume is _constantly_."
 
 ## Problem
 
-Pagination uses `offset: articles.length`. Offsets index into the list *as
-it is right now* — but the list moved. When a new article is prepended
+Pagination uses `offset: articles.length`. Offsets index into the list _as
+it is right now_ — but the list moved. When a new article is prepended
 between requests, every existing article shifts down one position, so the
 next offset window overlaps the previous one and re-serves the last item of
 page one.
@@ -41,17 +41,22 @@ page one.
 ## Root Cause Summary
 
 The comment in `loadMore` insists offset and list length "can never drift
-apart" — true for the *client's* list, but the offset is interpreted
-against the *server's* list, and the server's list changes underneath live
+apart" — true for the _client's_ list, but the offset is interpreted
+against the _server's_ list, and the server's list changes underneath live
 readers. Offset pagination is only stable over immutable data. Look at what
 else `newsApi.ts` exports: the server already speaks a pagination dialect
-that survives insertions, keyed not by position but by *identity* — "give
+that survives insertions, keyed not by position but by _identity_ — "give
 me what comes after the last article I have."
 
 ## Requirements for the Fix
 
 - After Load more, all ten stories must be present with no article id
   appearing twice — encoded in `NewsFeed.test.tsx`.
+- The **full sequence** must be right: `a-101` through `a-110`, in order,
+  once each. Over-fetching and filtering the duplicates out client-side
+  gets the first page past the finish line and leaves the sequence to
+  drift on the next one.
+- Clicking Load more past the last story adds nothing and loses nothing.
 - The first page must still render the five seeded stories in order (guard
   test).
 - Fix the pagination strategy — don't deduplicate the symptom away by
