@@ -29,6 +29,33 @@ describe("MentionWatch", () => {
         await waitFor(() => expect(mentionCount()).toBe(3));
     });
 
+    it("counts a burst and the replies that follow it", async () => {
+        render(<MentionWatch />);
+
+        fireEvent.click(screen.getByRole("button", { name: /deliver three/i }));
+        await waitFor(() => expect(mentionCount()).toBe(3));
+
+        fireEvent.click(screen.getByRole("button", { name: /reply/i }));
+        await waitFor(() => expect(mentionCount()).toBe(4));
+
+        // Both repairs have to hold at once, and neither may double-count.
+        fireEvent.click(screen.getByRole("button", { name: /reply/i }));
+        await waitFor(() => expect(mentionCount()).toBe(5));
+    });
+
+    it("keeps counting across repeated deliveries", async () => {
+        render(<MentionWatch />);
+
+        fireEvent.click(screen.getByRole("button", { name: /deliver one/i }));
+        await waitFor(() => expect(mentionCount()).toBe(1));
+
+        fireEvent.click(screen.getByRole("button", { name: /deliver three/i }));
+        await waitFor(() => expect(mentionCount()).toBe(4));
+
+        fireEvent.click(screen.getByRole("button", { name: /deliver one/i }));
+        await waitFor(() => expect(mentionCount()).toBe(5));
+    });
+
     it("counts a single delivery once", async () => {
         render(<MentionWatch />);
 

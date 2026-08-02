@@ -43,6 +43,10 @@ first.
 - A reply mention inside an existing message increments the badge
   (Red A).
 - A three-message burst increments the badge by three (Red B).
+- Both repairs hold at the same time: a burst followed by two replies
+  reads 3 → 4 → 5, with nothing counted twice (Red C).
+- The count keeps accumulating across repeated deliveries of different
+  sizes (Red D).
 - A single delivery still counts exactly once — no double-counting
   (guard).
 - Research topics: `MutationObserver` init options (`childList` vs
