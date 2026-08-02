@@ -31,6 +31,39 @@ describe("PollBooth", () => {
         expect(getSubmitted()).toEqual({ optionId: "taqueria", count: 1 });
     });
 
+    it("keeps adding up across repeated boosts", () => {
+        render(<PollBooth />);
+
+        fireEvent.click(screen.getByLabelText("boost Noodle Bar"));
+        fireEvent.click(screen.getByLabelText("boost Noodle Bar"));
+        fireEvent.click(screen.getByLabelText("vote Noodle Bar"));
+
+        expect(screen.getByTestId("votes-noodle-bar")).toHaveTextContent(
+            "5 votes"
+        );
+        // Nobody else's tally moves.
+        expect(screen.getByTestId("votes-taqueria")).toHaveTextContent(
+            "0 votes"
+        );
+        expect(screen.getByTestId("votes-green-bowl")).toHaveTextContent(
+            "0 votes"
+        );
+    });
+
+    it("submits the count including everything cast before it", () => {
+        render(<PollBooth />);
+
+        fireEvent.click(screen.getByLabelText("vote La Taqueria"));
+        fireEvent.click(screen.getByLabelText("boost La Taqueria"));
+        fireEvent.click(screen.getByLabelText("submit La Taqueria"));
+
+        expect(screen.getByTestId("votes-taqueria")).toHaveTextContent(
+            "4 votes"
+        );
+        // What was reported has to be what is on screen.
+        expect(getSubmitted()).toEqual({ optionId: "taqueria", count: 4 });
+    });
+
     it("renders all options and counts single votes", () => {
         render(<PollBooth />);
 
