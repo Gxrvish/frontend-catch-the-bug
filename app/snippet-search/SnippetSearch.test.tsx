@@ -53,6 +53,49 @@ describe("SnippetSearch", () => {
         expect(hits[0]).toHaveTextContent(/beta/i);
     });
 
+    it("treats a dot as a literal character", () => {
+        render(<SnippetSearch />);
+
+        // As a pattern "." matches every row; as text, none contain one.
+        type(".");
+
+        expect(screen.queryAllByTestId("row")).toHaveLength(0);
+    });
+
+    it("highlights every matching row, whatever the case", () => {
+        render(<SnippetSearch />);
+
+        type("Beta");
+
+        const rows = screen.getAllByTestId("row");
+        expect(rows).toHaveLength(4);
+        // Not just the first one — every row that matched has its hit.
+        rows.forEach((row) => {
+            expect(row.querySelectorAll('[data-testid="hit"]')).toHaveLength(1);
+        });
+        // …and the highlight keeps the text's own casing.
+        expect(rows[0].querySelector('[data-testid="hit"]')).toHaveTextContent(
+            "Beta"
+        );
+        expect(rows[1].querySelector('[data-testid="hit"]')).toHaveTextContent(
+            "beta"
+        );
+    });
+
+    it("handles the empty and no-match ends", () => {
+        render(<SnippetSearch />);
+
+        type("");
+        expect(screen.getAllByTestId("row")).toHaveLength(7);
+        expect(screen.queryAllByTestId("hit")).toHaveLength(0);
+
+        type("zzzz");
+        expect(screen.queryAllByTestId("row")).toHaveLength(0);
+
+        type("beta");
+        expect(screen.getAllByTestId("row")).toHaveLength(4);
+    });
+
     it("finds and highlights an exact-case unique match", () => {
         render(<SnippetSearch />);
 

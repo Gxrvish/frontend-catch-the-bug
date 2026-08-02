@@ -18,7 +18,7 @@ wrong rows: searching `(v2)` also returns titles that merely contain
 ## Ticket B — "Half my matches are missing"
 
 Searching "beta" shows two or three of the four articles that contain the
-word — and *which* rows go missing changes as the list shifts. The rows
+word — and _which_ rows go missing changes as the list shifts. The rows
 that disappear provably match the query.
 
 ## Ticket C — "The match isn't highlighted"
@@ -37,7 +37,7 @@ fine.
 ## Root Cause Hints
 
 - **A:** the query goes into `new RegExp(query, …)` raw. User input is
-  *text*, not a pattern — every regex metacharacter must be escaped before
+  _text_, not a pattern — every regex metacharacter must be escaped before
   it reaches the constructor (there's a well-known one-liner for this).
 - **B:** one regex with the `g` flag is reused for every row, with
   `.test()`. A global regex is **stateful**: each successful `.test()`
@@ -47,15 +47,19 @@ fine.
 - **C:** the filter matches case-insensitively, but the highlighter looks
   up the slice with `text.indexOf(query)` — case-sensitive — and gets
   `-1`. Find the position case-insensitively (index into lowercased
-  copies), then slice the *original* string.
+  copies), then slice the _original_ string.
 
 ## Requirements for the Fix
 
 - Metacharacter queries neither crash nor over-match — `(v2` is safe and
   `(v2)` matches exactly the row containing it, highlighted (Red A ×2).
+  A lone `.` matches no row at all, rather than every row (Red A3).
 - Every row containing "beta" is listed — all four (Red B).
 - A match is highlighted even when its case differs from the query
-  (Red C).
+  (Red C) — in **every** matching row, not only the first, and the
+  highlight keeps the article's own casing (Red C2).
+- The empty query lists everything with no highlights, and a query that
+  matches nothing lists nothing (Red D).
 - An exact-case, unique query still shows its one row with a highlight
   (guard).
 - Research topics: escaping user input for `RegExp` construction, `g`-flag
