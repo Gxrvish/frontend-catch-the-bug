@@ -38,11 +38,11 @@ URL.
 ## Root Cause Hints
 
 - **A:** `pushState` never notifies the app — the browser only fires a
-  `popstate` event when the user *travels* (Back/Forward). Nothing in the
+  `popstate` event when the user _travels_ (Back/Forward). Nothing in the
   component listens for it. Subscribe in an effect (and unsubscribe on
   cleanup), then restore the UI from `event.state` / `location.search`.
 - **B:** the search box calls `pushState` on every keystroke. History
-  entries are for *places the user can go back to*, not for transient
+  entries are for _places the user can go back to_, not for transient
   state. The History API has a second method that updates the current
   entry in place — transient state belongs there.
 - **C:** the URL is glued together with a template string, so the brand's
@@ -52,6 +52,16 @@ URL.
 ## Requirements for the Fix
 
 - Back restores the previously selected brand in the UI (Red A).
+- The subscription is registered exactly once and removed on unmount —
+  re-renders must not stack listeners, and none may outlive the component
+  (Red A2).
+- Back onto the entry the page loaded with restores the initial filters.
+  That entry's history state is `null`, which is a valid destination, not
+  a reason to skip the restore (Red A3).
+- Back restores the search text as well as the brand — one entry
+  describes the whole filter state (Red A4).
+- Back onto an entry whose brand needs encoding restores it intact
+  (Red A5).
 - Typing a six-letter search grows history by at most one entry (Red B).
 - "Fog & Mist" round-trips through the URL intact (Red C).
 - Clicking a simple brand still updates the URL and filters the list
