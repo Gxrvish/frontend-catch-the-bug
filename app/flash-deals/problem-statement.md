@@ -24,8 +24,8 @@ the client — visible flicker, wasted server work, and any browser-only state
 Two independent inputs disagree between server and client:
 countdown text derived from the wall clock, and the dismissed flag read from
 device-local storage that the server can never see. The `typeof window`
-guard makes the code *run* on the server — it does not make the two sides
-*agree*.
+guard makes the code _run_ on the server — it does not make the two sides
+_agree_.
 
 ## Failure Scenario
 
@@ -51,7 +51,7 @@ guard makes the code *run* on the server — it does not make the two sides
 
 Hydration is a contract: the first client render must produce exactly what
 the server produced. Anything read during render that differs between the
-two environments — `Date.now()`, `Math.random()`, locale, and *anything*
+two environments — `Date.now()`, `Math.random()`, locale, and _anything_
 behind a `typeof window` guard — breaks the contract by construction. The
 established cure is a deliberate two-pass render: the first client render
 pretends to know only what the server knew, then a post-mount step (an
@@ -61,11 +61,18 @@ client-only truth.
 ## Requirements for the Fix
 
 - Hydration must be clean: no recoverable errors, no "hydrat…" console
-  output, server HTML adopted as-is (encoded in `FlashDeals.test.tsx`).
+  output, server HTML adopted as-is (encoded in `FlashDeals.test.tsx`) —
+  both when the device has dismissed the bar and when it has not. The
+  clock alone breaks the contract; dismissal is only half the ticket.
+- The server HTML must still **contain the deals**. Rendering nothing
+  until mounted also hydrates cleanly, and gives up server rendering
+  entirely — the countdown has to be in the adopted markup.
+- Clean hydration is not permission to ignore the device: a bar dismissed
+  earlier must end up dismissed once the second pass lands.
 - After mount the live countdown must appear, and dismissal must still hide
   the bar and persist (also encoded).
 - `suppressHydrationWarning` on the countdown is a legitimate, documented
-  escape hatch for the *text* part — but it cannot fix the structural
+  escape hatch for the _text_ part — but it cannot fix the structural
   dismissed/visible mismatch, so understand both halves before reaching for
   it. Research topics: React hydration and two-pass rendering, the
   `useSyncExternalStore` `getServerSnapshot` argument, why
