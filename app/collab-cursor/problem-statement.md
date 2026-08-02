@@ -9,7 +9,7 @@ Two tickets from a realtime-collab-scale company.
 
 ## Ticket A — "A peer who was already moving shows up in the wrong place"
 
-When you open a doc, peers who moved *just before* you connected render at
+When you open a doc, peers who moved _just before_ you connected render at
 their **old** positions and never correct — until they happen to move
 again. The relay clearly delivered the update (the store's data is
 right), but this client is showing a stale snapshot it captured at mount.
@@ -36,10 +36,10 @@ sends 4 broadcasts, not 1. Bandwidth graphs spike with active editors.
   client never heard it, and the seed is frozen. This is the exact gap
   `useSyncExternalStore` exists to close: it subscribes in the commit
   phase and re-reads the snapshot, so an update in the render→subscribe
-  window can't slip through. External *mutable* stores must be read
+  window can't slip through. External _mutable_ stores must be read
   through it, not hand-rolled `useState`+`useEffect`.
 - **B:** the debounce wraps `moveCursor`, but it's constructed **inline
-  in the component body** — so every render builds a *new* debounce with
+  in the component body** — so every render builds a _new_ debounce with
   its own fresh timer. Your optimistic local move re-renders the
   component between hops, each render makes a new debouncer, and each
   one's timer fires independently: no call ever cancels another. A
@@ -49,7 +49,15 @@ sends 4 broadcasts, not 1. Bandwidth graphs spike with active editors.
 ## Requirements for the Fix
 
 - A peer move delivered during mount is reflected (Red A).
+- Catching up at mount must not cost the live subscription — a peer move
+  after mount still renders (Red A2).
 - A 4-hop burst collapses to exactly one broadcast (Red B).
+- The one broadcast carries the **last** position of the burst; a
+  leading-edge debounce also sends one, and sends the wrong one (Red B2).
+- Every burst collapses, not only the first — broadcasting once and then
+  going quiet is not debouncing (Red B3).
+- A peer move arriving mid-burst still renders, and the re-render it
+  causes must not spawn a second timer (Red B4).
 - Peers render with names/positions; a settled broadcast updates your
   stored position (guard).
 - Read the store through `useSyncExternalStore`; persist one debounce
