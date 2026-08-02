@@ -38,4 +38,57 @@ describe("TrackInspector", () => {
         fireEvent.click(screen.getByText("Save changes"));
         expect(screen.getByText("Neon Skyline (Remix)")).toBeInTheDocument();
     });
+
+    it("discards an uncommitted draft when the selection changes", () => {
+        render(<TrackInspector />);
+
+        fireEvent.change(screen.getByLabelText("track title"), {
+            target: { value: "Neon Skyline (Remix)" },
+        });
+
+        fireEvent.click(screen.getByText("Gravity Well"));
+        fireEvent.click(screen.getByText("Neon Skyline"));
+
+        // Coming back is a fresh edit of the stored track, not a resumed
+        // draft nobody saved.
+        expect(screen.getByLabelText("track title")).toHaveValue(
+            "Neon Skyline"
+        );
+    });
+
+    it("saves only into the track that is selected", () => {
+        render(<TrackInspector />);
+
+        fireEvent.click(screen.getByText("Gravity Well"));
+        fireEvent.change(screen.getByLabelText("track title"), {
+            target: { value: "Gravity Well II" },
+        });
+        fireEvent.click(screen.getByText("Save changes"));
+
+        // The other fields of the selected track survive…
+        expect(screen.getByText("Gravity Well II")).toBeInTheDocument();
+        expect(
+            screen.getByText(/Orbit Kids · 140 BPM · E/)
+        ).toBeInTheDocument();
+        // …and the track that was selected before is untouched.
+        expect(screen.getByText("Neon Skyline")).toBeInTheDocument();
+        expect(
+            screen.getByText(/Velvet Circuit · 118 BPM/)
+        ).toBeInTheDocument();
+    });
+
+    it("shows saved values again after switching away and back", () => {
+        render(<TrackInspector />);
+
+        fireEvent.change(screen.getByLabelText("track bpm"), {
+            target: { value: "124" },
+        });
+        fireEvent.click(screen.getByText("Save changes"));
+
+        fireEvent.click(screen.getByText("Paper Lanterns"));
+        expect(screen.getByLabelText("track bpm")).toHaveValue(92);
+
+        fireEvent.click(screen.getByText("Neon Skyline"));
+        expect(screen.getByLabelText("track bpm")).toHaveValue(124);
+    });
 });
