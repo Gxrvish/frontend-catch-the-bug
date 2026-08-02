@@ -9,7 +9,7 @@ and subscribe without knowing about each other. Three tickets.
 
 ## Ticket A — "One save, three toasts"
 
-The toast hub shows *more* toasts than were published — the count keeps
+The toast hub shows _more_ toasts than were published — the count keeps
 climbing the longer the page has been open. Publish twice and you get
 three toasts; publish again and you get more. It's as if the hub
 registers a new listener every time it renders.
@@ -22,7 +22,7 @@ setState into dead components.
 
 ## Ticket C — "A dismissed toast eats the next one"
 
-When one handler unsubscribes another *during* an emit (a toast that
+When one handler unsubscribes another _during_ an emit (a toast that
 dismisses a sibling), the sibling that was supposed to receive the same
 in-flight event is skipped entirely.
 
@@ -44,19 +44,23 @@ in-flight event is skipped entirely.
 - **B:** the bell subscribes in an effect but its cleanup calls
   `off("alert", <a brand-new inline function>)` — a different reference
   from the one it registered, so `off` never finds it. Unsubscribe with
-  the *same* handler reference, or use the token `on` returns.
+  the _same_ handler reference, or use the token `on` returns.
 - **C:** `emit` iterates the live handler `Set` while a handler mutates it
   (`off`), so a not-yet-visited subscriber gets removed before its turn
-  and is skipped. Iterate over a *snapshot* (`[...set]`) so the in-flight
+  and is skipped. Iterate over a _snapshot_ (`[...set]`) so the in-flight
   delivery is stable.
 
 ## Requirements for the Fix
 
-- Publishing twice shows exactly two toasts (Red A).
+- Publishing twice shows exactly two toasts (Red A) — with the hub
+  holding exactly **one** subscription, and none after it unmounts
+  (Red A2).
 - Unmounting the bell removes its listener — `handlerCount("alert")` is 0
-  (Red B).
+  (Red B) — and two bells each detach only their own (Red B2).
 - An emit reaches every subscriber registered when it started, even if a
-  handler unsubscribes another (Red C).
+  handler unsubscribes another (Red C) — or unsubscribes itself. A
+  handler subscribed _during_ an emit belongs to the next one, not this
+  one (Red C2).
 - A single publish still shows one toast (guard).
 - Research topics: subscribing in effects vs render, stable handler
   identity for unsubscribe, snapshotting listeners before dispatch to
