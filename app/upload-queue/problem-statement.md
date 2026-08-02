@@ -63,10 +63,14 @@ as failed either — the UI just sits there forever.
 
 - Never more than `CONCURRENCY` (2) uploads in flight (Red A).
 - Cancelling aborts the request, and the row stays `cancelled` even after
-  the transport answers late (Red B).
+  the transport answers late (Red B) — and a file cancelled while it is
+  still **queued** is never uploaded at all (Red B2).
 - One failing file: it ends `failed`, the other four end `done`, and the
-  queue's `done` promise resolves (Red C).
+  queue's `done` promise resolves (Red C). A cancel and a failure in the
+  same run both land, and the queue still finishes (Red C2). Even with
+  every file failing, `done` resolves — a queue that rejects on the first
+  failure never reports the rest (Red C3).
 - The happy path still uploads all five files (guard).
 - Research topics: promise pools / concurrency limiting, `AbortController`
-  + `AbortSignal` (and the `AbortError` rejection), `Promise.all` vs
-  `Promise.allSettled`, and per-task error isolation.
+    - `AbortSignal` (and the `AbortError` rejection), `Promise.all` vs
+      `Promise.allSettled`, and per-task error isolation.
