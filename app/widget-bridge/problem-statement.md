@@ -10,8 +10,8 @@ marketplace-scale company, both about `EventTarget` semantics.
 ## Ticket A — "The live rating never updates"
 
 Picking stars updates the widget, but the host's "Live rating" label
-stays "—" forever. The widget *is* dispatching `rating:change` on its
-root element, and the host *is* listening on `document`. The event just
+stays "—" forever. The widget _is_ dispatching `rating:change` on its
+root element, and the host _is_ listening on `document`. The event just
 never makes the trip.
 
 ## Ticket B — "Only the first submit counts"
@@ -39,8 +39,12 @@ one. Remounting the page fixes it — once.
 
 ## Requirements for the Fix
 
-- Star picks reach the host through the document listener (Red A).
+- Star picks reach the host through the document listener (Red A) — every
+  pick, up and down, not only the first (Red A2).
 - Every submit updates the host — the latest value wins (Red B).
+- The two readouts stay independent: picking a star does not submit, and
+  submitting does not freeze the live value (Red C).
+- Both channels stop listening when the host unmounts.
 - The first submit still arrives exactly once (guard).
 - Research topics: `CustomEvent` init (`bubbles`, `composed`, `detail`),
   event dispatch vs propagation on `EventTarget`, and `addEventListener`
