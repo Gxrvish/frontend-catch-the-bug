@@ -19,7 +19,7 @@ fine; it's the restored one that's broken.
 ## Ticket B — "All the tags are gone"
 
 Back up a draft with tags, restore it — zero tags. Not wrong tags:
-*none*, every time. The tag picker shows an empty set.
+_none_, every time. The tag picker shows an empty set.
 
 ## Ticket C — "The deleted subtitle keeps coming back"
 
@@ -42,7 +42,7 @@ JSON has six types — and none of them is `Date`, `Set`, or `undefined`:
 - **A:** `JSON.stringify` turns a `Date` into its ISO **string**;
   `JSON.parse` has no idea it was ever a date and leaves it a string.
   Whatever consumes `updatedAt` then calls `.getTime()` on a string. The
-  deserializer has to *revive* the date.
+  deserializer has to _revive_ the date.
 - **B:** `JSON.stringify(new Set([...]))` is `{}` — a Set has no
   enumerable properties and no `toJSON`. The set must be serialized as an
   array and rebuilt on the way in.
@@ -56,9 +56,19 @@ JSON has six types — and none of them is `Date`, `Set`, or `undefined`:
 
 - A restored draft's `updatedAt` is a real `Date` and
   `minutesSinceEdit` works (Red A).
-- Tags come back as a `Set` with the same members (Red B).
+- Tags come back as a `Set` with the same members (Red B) — and a draft
+  with **no** tags comes back as an empty `Set`, not a plain object
+  (Red B2).
 - A deliberately removed subtitle stays removed across the round-trip
-  (Red C).
+  (Red C), and stays distinguishable from an empty one: `""` restores as
+  `""`, `undefined` as `undefined`, `"Rollout"` as `"Rollout"` (Red C2).
+- Everything must survive **the stored string alone** — dropping the
+  vault contents into a fresh vault and loading it back has to work, so
+  no in-memory copy of the draft can stand in for the serialization
+  (Red D).
+- Saving must not mutate the draft it was handed (Red E).
+- `loadDraft()` still returns `null` when nothing has been backed up
+  (Red F).
 - The title still round-trips (guard).
 - Do not modify `vault.ts` — fix the serialization in `draftStore.ts`.
 - Research topics: what survives `JSON.stringify` (and what silently
