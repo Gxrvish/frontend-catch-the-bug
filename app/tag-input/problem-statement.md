@@ -18,7 +18,7 @@ destroyed the moment it arrives.
 ## Ticket B — "Confirming a candidate submits the tag"
 
 Mid-composition, pressing Enter selects the IME's suggested candidate —
-that's what Enter *means* during composition. This field treats it as
+that's what Enter _means_ during composition. This field treats it as
 "add tag" and submits the half-typed romaji.
 
 ## Fast Reproduction Path
@@ -30,22 +30,27 @@ that's what Enter *means* during composition. This field treats it as
 
 ## Root Cause Hints
 
-- **A:** normalizing on every `change` event means normalizing *inside*
+- **A:** normalizing on every `change` event means normalizing _inside_
   an active composition. The DOM brackets a composition with
   `compositionstart` / `compositionend` — while one is open, the text in
   the field is provisional and must not be rewritten. Normalize when the
-  tag is *added*, not while the user types.
+  tag is _added_, not while the user types.
 - **B:** the Enter that confirms an IME candidate still fires `keydown`.
   The event tells you it's part of a composition —
   `event.nativeEvent.isComposing` (spec'd on `KeyboardEvent`) is `true`.
   A submit handler must ignore composing Enters. (Track
-  `compositionstart`/`end` too — Safari fires the keydown *after*
+  `compositionstart`/`end` too — Safari fires the keydown _after_
   `compositionend`.)
 
 ## Requirements for the Fix
 
-- A composed string (日本) survives typing intact (Red A).
-- Enter during composition adds no tag (Red B).
+- A composed string (日本) survives typing intact (Red A) — and so does
+  plain text: the field shows what was typed. The slug rule still has to
+  be applied when the tag is **added**; deleting the normalisation is not
+  the fix (Red A2).
+- Enter during composition adds no tag (Red B) — but Enter after the
+  composition ends does. Standing down during composition must not mean
+  standing down afterwards (Red B2).
 - A plain ASCII tag is still added on Enter and clears the field (guard).
 - Research topics: IME composition events
   (`compositionstart`/`compositionupdate`/`compositionend`),
