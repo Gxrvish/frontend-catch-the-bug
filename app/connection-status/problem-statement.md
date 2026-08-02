@@ -52,6 +52,13 @@ identity when the state actually changes".
 
 - Mounting `ConnectionStatus` must render the pill without crashing —
   encoded in `ConnectionStatus.test.tsx`.
+- Two consecutive `getSnapshot()` calls on an unchanged store must return
+  the **same value**, and a write must produce a different one. A cache
+  that never invalidates satisfies the first half and breaks the pill.
+  `getServerSnapshot` is held to the same rule.
+- The pill must still follow the connection down and back up.
+- Mounting must not record a check — writing to the store to stabilise
+  identity is not the repair.
 - The store's observable behavior (subscribe/notify/state transitions,
   including the `checks` counter) must keep working — the store unit test
   stays green.
