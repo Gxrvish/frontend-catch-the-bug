@@ -77,6 +77,54 @@ describe("ReportWorker", () => {
         expect(getMainThreadRuns()).toBe(0);
     });
 
+    it("keeps the newest request when three overlap", () => {
+        render(<ReportWorker />);
+        const worker = FakeWorker.instances[0];
+
+        fireEvent.click(screen.getByRole("button", { name: "Sum 10" }));
+        fireEvent.click(screen.getByRole("button", { name: "Sum 20" }));
+        fireEvent.click(screen.getByRole("button", { name: "Sum 30" }));
+
+        const [first, second, third] = worker.posted;
+        act(() => worker.reply({ id: second.id, range: 20, total: 200 }));
+        act(() => worker.reply({ id: third.id, range: 30, total: 300 }));
+        act(() => worker.reply({ id: first.id, range: 10, total: 100 }));
+
+        // Ignoring everything after the first answer would also beat the
+        // stale reply — and freeze the panel.
+        expect(screen.getByTestId("total")).toHaveTextContent("300");
+    });
+
+    it("ignores a reply that matches no request", () => {
+        render(<ReportWorker />);
+        const worker = FakeWorker.instances[0];
+
+        fireEvent.click(screen.getByRole("button", { name: "Sum 10" }));
+        act(() =>
+            worker.reply({ id: worker.posted[0].id, range: 10, total: 55 })
+        );
+
+        act(() => worker.reply({ id: 9999, range: 10, total: 1 }));
+
+        expect(screen.getByTestId("total")).toHaveTextContent("55");
+    });
+
+    it("starts a fresh worker after a remount, still off the main thread", () => {
+        const first = render(<ReportWorker />);
+        first.unmount();
+        expect(FakeWorker.instances[0].terminated).toBe(true);
+
+        render(<ReportWorker />);
+        const worker = FakeWorker.instances[1];
+        fireEvent.click(screen.getByRole("button", { name: "Sum 20" }));
+        act(() =>
+            worker.reply({ id: worker.posted[0].id, range: 20, total: 210 })
+        );
+
+        expect(screen.getByTestId("total")).toHaveTextContent("210");
+        expect(getMainThreadRuns()).toBe(0);
+    });
+
     it("renders the worker's total for a request", () => {
         render(<ReportWorker />);
         const worker = FakeWorker.instances[0];

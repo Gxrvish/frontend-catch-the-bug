@@ -10,7 +10,7 @@ total the worker sends back. Tests run against a fake `Worker` (manual
 ## Ticket A — "The total is for the wrong request"
 
 Click two ranges quickly and the number that lands is whichever worker
-message arrives *last* — often the answer to the earlier, superseded
+message arrives _last_ — often the answer to the earlier, superseded
 request. Responses aren't matched to the request that asked for them.
 
 ## Ticket B — "Workers pile up"
@@ -36,7 +36,7 @@ exactly as before.
 
 ## Root Cause Hints
 
-- **A:** `onmessage` calls `setTotal(event.data.total)` for *any* reply,
+- **A:** `onmessage` calls `setTotal(event.data.total)` for _any_ reply,
   ignoring which request it answers. Tag each request with an id, remember
   the latest one (a ref), and drop replies whose id isn't current.
 - **B:** the effect creates the worker but its cleanup is empty — it never
@@ -47,9 +47,14 @@ exactly as before.
 
 ## Requirements for the Fix
 
-- The total reflects the latest request, not a late stale reply (Red A).
-- Unmounting terminates the worker (Red B).
-- The aggregation does not run on the main thread (Red C).
+- The total reflects the latest request, not a late stale reply (Red A) —
+  with three overlapping requests too. Ignoring everything after the
+  first answer also beats the stale reply, and freezes the panel
+  (Red A2). A reply matching no request is ignored (Red A3).
+- Unmounting terminates the worker (Red B), and a remount starts a fresh
+  one that works (Red B2).
+- The aggregation does not run on the main thread (Red C), including
+  after a remount.
 - A single request still renders the worker's total (guard).
 - Research topics: correlating Web Worker requests/responses with ids,
   worker lifecycle and `terminate()`, keeping heavy work off the main
