@@ -22,7 +22,7 @@ QA at a video-scale company filed these tickets:
 
 1. Click any card — the preview opens.
 2. Click ✕ (or the backdrop).
-3. The close *does* run — and then the modal is immediately reopened before
+3. The close _does_ run — and then the modal is immediately reopened before
    the frame is painted. To the user, the button is simply dead.
 
 ### B. Inflated analytics
@@ -42,19 +42,22 @@ the preview. Watch the analytics counter as you click things inside the modal.
 The modal's DOM lives under `document.body`, so by DOM rules its clicks should
 never reach the card. But React does not propagate events along the DOM tree —
 it propagates them along the **component tree**, and portals are transparent
-to that propagation. Where the modal is *rendered from* determines who its
+to that propagation. Where the modal is _rendered from_ determines who its
 events bubble to.
 
 ## Requirements for the Fix
 
-- ✕ and backdrop click must close the preview (`TrailerGrid.test.tsx` encodes
-  the ✕ case).
+- ✕ and backdrop click must close the preview — both are now encoded in
+  `TrailerGrid.test.tsx`, and neither may register another card click.
 - Clicks inside the preview must never fire the card's `onClick` — queue adds
-  must not inflate card-click analytics (also encoded).
+  must not inflate card-click analytics (also encoded), including repeated
+  adds.
+- The preview's own controls do their own job and nothing else's: toggling
+  mute must not close the dialog.
 - Keep using a portal — the modal must still render into `document.body`.
 - Two legitimate fix shapes exist: stop the propagation at the right boundary,
   or restructure so the modal is no longer a child of a clickable component.
-  Understand both; know why `stopPropagation` on the *native* document level
+  Understand both; know why `stopPropagation` on the _native_ document level
   wouldn't have helped. Topics worth researching: React's event delegation
   (root-level listener), how synthetic events traverse portals, and
   `e.stopPropagation()` semantics in React vs the DOM.
