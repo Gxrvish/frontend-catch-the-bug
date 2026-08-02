@@ -58,7 +58,12 @@ in the suppression comment critically.
 - Baseline stats with the panel closed must keep working (also encoded).
 - The fetch-only-when-open behavior is worth preserving: the fix is not "let
   the request fire on mount". Think about where the gating belongs so the
-  hook itself is always called. Research topics: Rules of Hooks and _why_
+  hook itself is always called. The tests count what reaches the analytics
+  endpoint — zero before the panel opens, one after.
+- The in-flight state ("Crunching numbers…") still shows, and all four
+  metrics render once the data lands.
+- Closing the panel hides the metrics and leaves the baseline alone;
+  reopening brings them back. Research topics: Rules of Hooks and _why_
   they exist (hook call order as identity), the `useHook(enabled)` /
   `enabled` flag pattern popularized by data-fetching libraries,
   `eslint-plugin-react-hooks` `rules-of-hooks`.
