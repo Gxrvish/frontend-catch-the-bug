@@ -102,6 +102,49 @@ describe("WsTicker", () => {
         expect(FakeWebSocket.instances[0].sent).toContain("ping");
     });
 
+    it("closes its socket when the ticker unmounts", () => {
+        const { unmount } = render(<WsTicker />);
+        act(() => FakeWebSocket.instances[0].open());
+
+        unmount();
+
+        expect(openSockets()).toHaveLength(0);
+    });
+
+    it("keeps appending after a reconnect", () => {
+        render(<WsTicker />);
+        act(() => FakeWebSocket.instances[0].open());
+        act(() => FakeWebSocket.instances[0].message("A"));
+
+        fireEvent.click(screen.getByRole("button", { name: "Switch symbol" }));
+        act(() => FakeWebSocket.instances[1].open());
+        act(() => FakeWebSocket.instances[1].message("B"));
+        act(() => FakeWebSocket.instances[1].message("C"));
+
+        // The stale-closure bug and the leak bug both hide here.
+        expect(
+            screen.getAllByTestId("tick").map((el) => el.textContent)
+        ).toEqual(["A", "B", "C"]);
+    });
+
+    it("flushes several queued sends in order, then sends live", () => {
+        render(<WsTicker />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Send ping" }));
+        fireEvent.click(screen.getByRole("button", { name: "Send ping" }));
+        act(() => FakeWebSocket.instances[0].open());
+
+        expect(FakeWebSocket.instances[0].sent).toEqual(["ping", "ping"]);
+
+        // Once open, a send goes straight out rather than queueing again.
+        fireEvent.click(screen.getByRole("button", { name: "Send ping" }));
+        expect(FakeWebSocket.instances[0].sent).toEqual([
+            "ping",
+            "ping",
+            "ping",
+        ]);
+    });
+
     it("renders a single received message once", () => {
         render(<WsTicker />);
         act(() => FakeWebSocket.instances[0].open());
