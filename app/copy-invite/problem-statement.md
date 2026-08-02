@@ -17,7 +17,7 @@ the product.
 
 What lands on the clipboard is
 `https://app.example.com/invite/9f2c…` — ellipsis included. That's the
-*display* string from the pill, not the invite link. Every pasted invite
+_display_ string from the pill, not the invite link. Every pasted invite
 404s.
 
 ## Fast Reproduction Path
@@ -41,8 +41,13 @@ What lands on the clipboard is
 ## Requirements for the Fix
 
 - "Copied!" appears only after the write resolves; while in flight the
-  UI says "Copying…", and a rejection shows "Copy failed" (Red A).
+  UI says "Copying…", and a rejection shows "Copy failed" (Red A, Red A2).
+- The button label and the readout show the same status (Red A3).
+- A second click starts the cycle over — the first click's success must
+  not still be on screen while the second write is in flight (Red A4).
 - The clipboard receives the full invite link (Red B).
+- The pill keeps showing the shortened link. Widening it so the scraped
+  text happens to be correct is not the repair (Red B2).
 - One click still performs exactly one write (guard).
 - Research topics: the async Clipboard API (`writeText`'s promise,
   rejection on permission denial), optimistic UI vs confirmed state, and
