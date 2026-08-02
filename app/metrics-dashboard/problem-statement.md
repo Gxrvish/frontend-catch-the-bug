@@ -54,6 +54,14 @@ blast wall.
   `MetricsDashboard.test.tsx`.
 - A fully healthy payload must render all four widgets and no fallback
   (also encoded).
+- Containment must survive **any** render error, not only a `null`
+  series: an empty `points` array is well-formed and still fatal. A
+  narrow `if (!widget.series)` guard passes the seeded payload and leaves
+  the next surprise uncontained.
+- Two broken widgets produce two fallbacks, with the healthy ones either
+  side untouched.
+- The failure belongs to the widget instance that failed — a fresh
+  dashboard with good data shows no fallback.
 - Wrap widgets individually, not the dashboard as a whole — the point is
   granular containment. Research topics: error boundaries (why they must be
   class components — `getDerivedStateFromError` / `componentDidCatch`),
