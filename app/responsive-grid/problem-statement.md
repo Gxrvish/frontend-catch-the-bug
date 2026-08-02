@@ -40,9 +40,12 @@ the container gets.
 
 ## Requirements for the Fix
 
-- Unmounting disconnects the observer (Red A).
+- Unmounting disconnects the observer (Red A), and there is exactly one
+  observer watching exactly one element for the component's life —
+  re-observing on every render is the other way to leak (Red A2).
 - The column count and reported width follow the measured content width
-  (Red B).
+  (Red B) at every breakpoint, in both directions, with the boundary
+  widths landing in the wider bucket (Red B2).
 - All six grid cells still render (guard).
 - Research topics: `ResizeObserver` lifecycle (observe/disconnect in
   effects), reading `contentRect`/box-size from observer entries instead of

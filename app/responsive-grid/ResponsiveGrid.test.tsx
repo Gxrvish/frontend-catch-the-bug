@@ -69,6 +69,46 @@ describe("ResponsiveGrid", () => {
         expect(screen.getByTestId("width")).toHaveTextContent("1000");
     });
 
+    it("follows every breakpoint, up and down", () => {
+        render(<ResponsiveGrid />);
+        const observer = FakeResizeObserver.instances[0];
+        const columns = () => screen.getByTestId("columns").textContent;
+
+        act(() => observer.trigger(400));
+        expect(columns()).toBe("1");
+
+        // The boundaries belong to the wider bucket.
+        act(() => observer.trigger(600));
+        expect(columns()).toBe("2");
+        act(() => observer.trigger(899));
+        expect(columns()).toBe("2");
+        act(() => observer.trigger(900));
+        expect(columns()).toBe("3");
+
+        // Shrinking has to walk back down too.
+        act(() => observer.trigger(500));
+        expect(columns()).toBe("1");
+        expect(screen.getByTestId("width")).toHaveTextContent("500");
+        expect(screen.getByTestId("grid")).toHaveStyle({
+            gridTemplateColumns: "repeat(1, 1fr)",
+        });
+    });
+
+    it("keeps one observer for the component's life", () => {
+        const { unmount } = render(<ResponsiveGrid />);
+        const observer = FakeResizeObserver.instances[0];
+
+        act(() => observer.trigger(1000));
+        act(() => observer.trigger(400));
+
+        // Re-observing on every render is the other way to leak.
+        expect(FakeResizeObserver.instances).toHaveLength(1);
+        expect(observer.targets).toHaveLength(1);
+
+        unmount();
+        expect(observer.disconnected).toBe(true);
+    });
+
     it("renders all six grid cells", () => {
         render(<ResponsiveGrid />);
 
