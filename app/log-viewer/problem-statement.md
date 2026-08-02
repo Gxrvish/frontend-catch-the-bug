@@ -12,7 +12,7 @@ QA ticket from an observability-scale company: "Opening `/log-viewer`
 freezes the tab for seconds. Scrolling stutters, the React profiler shows a
 single enormous commit, and the Elements panel shows the DOM node count
 exploding. On the on-call engineer's older laptop the tab crashed outright.
-The panel only ever *shows* about twenty rows — why is the page paying for
+The panel only ever _shows_ about twenty rows — why is the page paying for
 ten thousand?"
 
 ## Problem
@@ -41,7 +41,7 @@ the real budget of a large list, and this page blows through it on mount.
 
 The comment above the `.map()` claims off-screen rows are "effectively
 free" because the container is overflow-scroll. That is wrong: scrolling
-hides rows from *view*, not from the *DOM*. Every row still costs creation,
+hides rows from _view_, not from the _DOM_. Every row still costs creation,
 layout, and memory. The standard fix is windowing (virtualization): since
 every row is `ROW_HEIGHT` tall, the scroll offset tells you exactly which
 slice of the array is visible — render only that slice (plus a small
@@ -53,6 +53,12 @@ scrollbar geometry identical to the full list.
 - After scrolling, the rows for the scrolled-to region must be mounted and
   visible — encoded in `LogViewer.test.tsx`.
 - No more than ~60 rows mounted at any time (also encoded).
+- The window **follows** the scroll: back to the top shows `#1` again and
+  drops the rows from further down. A fixed slice that never moves would
+  pass the scroll-down test on its own.
+- Scrolling to the far end shows the last entry without running off the
+  end of the array.
+- Neighbouring rows and each row's level badge survive the windowing.
 - The header's total count and the top-of-list rows must be unchanged
   (guard test).
 - Hand-roll the windowing — no new dependencies. Research topics: windowed /
