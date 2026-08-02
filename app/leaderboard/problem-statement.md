@@ -45,3 +45,22 @@ These are useful follow-up optimizations, but they are not the primary correctne
 ## Success Criteria
 
 The challenge is solved when the reducer preserves newer local user data during stale poll merges, and the failing reducer test passes.
+
+## What The Tests Also Pin Down
+
+Refusing every incoming row would protect the local update and turn
+polling into a no-op, so the reducer has to keep telling the two cases
+apart:
+
+- A stale snapshot must not clobber a user with a newer live update
+  (Red A).
+- The **same** snapshot must still apply to everyone else — updating the
+  users with no live update, and adding the ones it introduces (Red B).
+- The local update survives the whole cycle: `FETCH_START` doesn't drop
+  it, and the `FETCH_SUCCESS` that follows still keeps it while clearing
+  `loading` (Red C).
+- The reducer is pure — it never mutates the state it is handed, and it
+  returns a new object when something changed (Red D). The tests freeze
+  the input, so an in-place write throws.
+- A live update for a user the reducer has never seen still adds them
+  (guard).
