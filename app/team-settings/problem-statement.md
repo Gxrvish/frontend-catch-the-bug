@@ -45,7 +45,7 @@ handler closely to see why the check never gets the chance to fire.
 The comment in `save` says it fetches "the freshest version number right
 before writing, so the save can never be rejected." That is exactly
 backwards. The version parameter is not a formality to satisfy the server —
-it is the client's *claim about what it saw*. By refetching the current
+it is the client's _claim about what it saw_. By refetching the current
 version and presenting it, the client forges that claim, turning
 compare-and-set into last-write-wins. The `baseVersion` must be the version
 of the document **the form was actually edited against** — the one from the
@@ -58,6 +58,10 @@ original load. Then a concurrent edit makes the save fail loudly with a
   encoded in `TeamSettingsForm.test.tsx`. Surfacing a conflict message (and
   letting the user reload/re-apply) is the expected UX; silently merging is
   acceptable only if nothing the teammate wrote is lost.
+- A rejected save lands **nothing**: the team name the user typed must
+  not reach the server either, and the success banner must not appear.
+- The version stays honest across repeated saves — two clean saves take
+  it to 3, and a conflicted third leaves the teammate's bump standing.
 - A plain save with no concurrent edit must still succeed (guard test).
 - Research topics: the lost-update problem, optimistic concurrency control,
   HTTP ETag / If-Match preconditions, compare-and-set, why "refetch before
