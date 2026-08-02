@@ -48,15 +48,20 @@ four tab stops instead of one.
   focus back where it came from.
 - **C:** the menu keeps its "active item" in React state and only paints
   it. Two things are missing: DOM focus must follow the active item, and
-  the menu should be **one** tab stop — the pattern is *roving tabindex*:
+  the menu should be **one** tab stop — the pattern is _roving tabindex_:
   the active item is `0`, every other item is `-1`.
 
 ## Requirements for the Fix
 
-- Tab and Shift+Tab wrap inside the open menu (Red A).
-- Closing with Escape returns focus to the trigger (Red B).
+- Tab and Shift+Tab wrap inside the open menu (Red A) — a trap has two
+  edges, so Tab must also step forward through the items and wrap off the
+  last one (Red A2).
+- Closing with Escape returns focus to the trigger (Red B) — and Escape
+  is not the only way out: running an action closes the menu and must
+  restore focus too (Red B2).
 - ArrowDown moves DOM focus, and only the active item is tabbable —
-  `[0, -1, -1, -1]` (Red C).
+  `[0, -1, -1, -1]` (Red C). ArrowUp walks back and stops at the top,
+  with the tab stop following it (Red C2).
 - Clicking an item still runs its action exactly once and closes the menu
   (guard).
 - Research topics: focus trapping, focus restoration on dismiss, roving
