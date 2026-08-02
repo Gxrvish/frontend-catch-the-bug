@@ -38,11 +38,11 @@ Two layers, peel them in order:
    in `DesignStudio` — what does `value={{ ... }}` produce on every render
    of the provider, regardless of whether anything inside changed? (And
    note: `memo` on a consumer is powerless against context — memo guards
-   *props*, context bypasses it by design.)
+   _props_, context bypasses it by design.)
 2. **Granularity.** Suppose you memoize that value object. Typing still
-   changes `search`, so the memoized object is still *legitimately* new
+   changes `search`, so the memoized object is still _legitimately_ new
    every keystroke — and every consumer of the context re-renders, because
-   React has no idea which *field* a consumer read. A single context is one
+   React has no idea which _field_ a consumer read. A single context is one
    subscription channel. If fast-changing state (search), medium
    (zoom) and never-changing state (user) share a channel, everyone
    subscribes to everything.
@@ -51,6 +51,12 @@ Two layers, peel them in order:
 
 - Typing in search must not re-render tiles; zooming must not re-render
   the badge — both encoded as probe-delta tests in `DesignStudio.test.tsx`.
+- Zoom must still reach the tiles: one zoom step is +40 tile renders. A
+  probe that never moves means the tiles went deaf, not quiet.
+- Typing in search must not re-render the badge either — nothing on this
+  page touches `user`, so neither channel should reach it.
+- Zoom clamping at its bounds is still just zoom, and still leaves the
+  badge alone.
 - Zoom must still visibly update tiles, search must still filter them
   (guard test).
 - Keep the render probes in place and keep `CanvasTile`/`UserBadge`
