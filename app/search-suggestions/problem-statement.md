@@ -30,13 +30,13 @@ overwrite it. The dropdown then answers a question the user is no longer asking.
 1. Open `/search-suggestions`. Keep **Easy Repro Mode** on (default).
 2. Type `iphone` quickly (or paste `ip`, then quickly append `hone`).
 3. Watch the red "Showing results for …" mismatch line and the request log:
-   the request for the short prefix lands *after* the one for the full query.
+   the request for the short prefix lands _after_ the one for the full query.
 
 ## Root Cause Summary
 
 The fetch effect applies every resolved response unconditionally. Nothing marks a
 request as superseded when a newer keystroke fires, so the last response to
-*arrive* wins instead of the last request to be *sent*.
+_arrive_ wins instead of the last request to be _sent_.
 
 ## Requirements for the Fix
 
@@ -46,4 +46,9 @@ request as superseded when a newer keystroke fires, so the last response to
   (ignore them, or cancel them outright).
 - `isLoading` must be false once the response for the **latest** query has landed.
 - Do not "fix" this by debouncing — debounce narrows the window but the race
-  remains. Make a minimal, targeted change in the hook.
+  remains. Make a minimal, targeted change in the hook. The tests read
+  `requestLog` and expect **one entry per query**, so collapsing the
+  keystrokes is visible.
+- The rule holds with three queries in flight, not just two.
+- `isLoading` goes false when the latest lands, and the stale response
+  arriving afterwards changes nothing at all.

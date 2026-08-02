@@ -42,6 +42,72 @@ describe("useSearchSuggestions", () => {
         ).toBe(true);
     });
 
+    it("keeps the newest query through a three-way race", async () => {
+        // Repro latencies: "ip" 850ms, "ipad" 500ms, "iphone" 150ms.
+        const { result, rerender } = renderHook(
+            ({ query }) =>
+                useSearchSuggestions(query, { simulationMode: "repro" }),
+            { initialProps: { query: "ip" } }
+        );
+
+        rerender({ query: "ipad" });
+        rerender({ query: "iphone" });
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(1200);
+        });
+
+        expect(result.current.resultsForQuery).toBe("iphone");
+        expect(
+            result.current.suggestions.every((s) => s.text.startsWith("iphone"))
+        ).toBe(true);
+    });
+
+    it("still fires a request per query rather than debouncing", async () => {
+        const { result, rerender } = renderHook(
+            ({ query }) =>
+                useSearchSuggestions(query, { simulationMode: "repro" }),
+            { initialProps: { query: "ip" } }
+        );
+
+        rerender({ query: "iphone" });
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(1200);
+        });
+
+        // Collapsing the keystrokes narrows the window and leaves the
+        // race in place — both requests must still have gone out.
+        expect(result.current.requestLog.map((entry) => entry.query)).toEqual([
+            "ip",
+            "iphone",
+        ]);
+        expect(result.current.resultsForQuery).toBe("iphone");
+    });
+
+    it("reports loading until the latest lands, and not after", async () => {
+        const { result, rerender } = renderHook(
+            ({ query }) =>
+                useSearchSuggestions(query, { simulationMode: "repro" }),
+            { initialProps: { query: "ip" } }
+        );
+
+        rerender({ query: "iphone" });
+        expect(result.current.isLoading).toBe(true);
+
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(200);
+        });
+        expect(result.current.isLoading).toBe(false);
+
+        // The stale response landing later must change nothing.
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(800);
+        });
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.resultsForQuery).toBe("iphone");
+    });
+
     it("does not report loading once the latest request has resolved", async () => {
         const { result, rerender } = renderHook(
             ({ query }) =>
