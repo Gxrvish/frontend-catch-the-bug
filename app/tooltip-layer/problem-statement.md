@@ -41,8 +41,8 @@ Both tickets come from the same fact: the browser has one layout engine,
 and **a geometry read has to flush every style write that came before it.**
 
 - **A:** the tooltip measures and positions itself in an effect that React
-  runs *after* the browser is allowed to paint. There is a second effect
-  hook that runs after the DOM is mutated but *before* paint — the one
+  runs _after_ the browser is allowed to paint. There is a second effect
+  hook that runs after the DOM is mutated but _before_ paint — the one
   React documents for exactly this "measure, then position" job. Which one
   is the code using?
 - **B:** the re-stack loop measures a badge, moves it, measures the next
@@ -55,7 +55,11 @@ and **a geometry read has to flush every style write that came before it.**
 
 - The tooltip is already positioned at paint time — `getPaintTop()` is
   `"40px"` (anchor `top` 24 + `height` 16) (Red A).
-- Re-measuring performs all four reads before the first write (Red B).
+- Re-measuring performs all four reads before the first write (Red B) —
+  and the badges still land where the measurements say: 0, 24, 48, 72
+  (20px tall, 4px gap). Batching the reads must not change the answer
+  (Red B2).
+- A second re-measure batches the same way (Red B3).
 - The tooltip text and all four badges still render (guard).
 - Research topics: `useLayoutEffect` vs `useEffect` (which one runs before
   paint, and what that costs), layout thrashing / forced synchronous
