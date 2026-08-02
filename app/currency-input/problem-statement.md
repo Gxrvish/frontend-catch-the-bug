@@ -31,24 +31,31 @@ trailing zero disappears while the user is still typing it.
 
 - **A:** a controlled input re-renders by React **assigning `.value`** on
   the DOM node — and assigning `value` moves the text-entry cursor to the
-  end of the new string. That happens on *every* keystroke; you only
+  end of the new string. That happens on _every_ keystroke; you only
   notice when the re-formatted text is a different length from what the
   user typed. React will not restore the caret for you: the handler must
   remember where the user was (not as a character offset — the separators
-  move! — but relative to the *digits*), and put it back after the DOM has
+  move! — but relative to the _digits_), and put it back after the DOM has
   been updated, before the browser paints.
 - **B:** the state is a `number`, so the state can only ever hold what a
   number can hold. `"12."` and `"12.50"` are not numbers — they are
-  *in-progress text*. Round-tripping the user's text through
+  _in-progress text_. Round-tripping the user's text through
   `parseAmount → format` destroys anything a number can't represent. What
   the user is typing has to be the state; the number is derived from it.
 
 ## Requirements for the Fix
 
 - Editing mid-number leaves the caret next to the digit that was typed
-  (Red A).
+  (Red A) — including at the very front of the field, where regrouping
+  shifts every separator (Red A2), and on deletion, not only insertion
+  (Red A3).
 - `12.` stays `12.`, and `12.50` keeps its trailing zero while typing
-  (Red B).
+  (Red B). `0.` and `0.05` behave the same way (Red B2).
+- The field can be **emptied**: one that refills itself with `0` cannot
+  be cleared (Red B3).
+- The charged amount is derived from the in-progress text — `12.` charges
+  12, an empty field charges 0 — without the text being rewritten under
+  the user (Red B4).
 - The charged amount still tracks what was typed (guard).
 - Research topics: controlled inputs and the DOM `value` setter's effect
   on the text-entry cursor, `selectionStart` / `setSelectionRange`,
