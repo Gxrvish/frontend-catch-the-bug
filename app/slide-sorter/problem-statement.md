@@ -5,7 +5,7 @@
 The deck editor reorders slide thumbnails with native HTML5 drag & drop —
 `draggable` cards, `dragstart`/`dragover`/`drop` handlers, payload carried
 on `dataTransfer`. Three tickets from a slides-scale company. All three
-live in the drag-and-drop *protocol*, not in React.
+live in the drag-and-drop _protocol_, not in React.
 
 ## Ticket A — "You can't drop anything, anywhere"
 
@@ -47,7 +47,7 @@ successful drop cleans it up.
   string given to `setData` and comes out only under the **same** format
   string. Compare what `dragstart` writes with what `drop` reads.
 - **C:** `drop` only fires on success — but `dragend` fires on the dragged
-  element after *every* drag, dropped or cancelled. The ghost-clearing
+  element after _every_ drag, dropped or cancelled. The ghost-clearing
   belongs in a `dragend` handler.
 
 ## Requirements for the Fix
@@ -55,9 +55,11 @@ successful drop cleans it up.
 - `dragover` on a card is cancelled, making it a legal drop target
   (Red A).
 - Dropping slide 1 on slide 3 reorders the deck — the dragged slide takes
-  the target's position (Red B).
+  the target's position (Red B) — and dragging **backwards** works the
+  same way (Red B2). Two drags in a row both land (Red B3).
 - A cancelled drag (dragend without drop) clears the dragging state
-  (Red C).
+  (Red C) — and so does a completed one.
+- Dropping a slide on itself changes nothing (Red D).
 - All four slides still render in order (guard).
 - Research topics: the HTML drag-and-drop model (`dragover` +
   `preventDefault` as the drop handshake), `DataTransfer.setData`/`getData`

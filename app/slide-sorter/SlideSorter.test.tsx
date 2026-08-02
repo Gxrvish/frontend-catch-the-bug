@@ -61,6 +61,66 @@ describe("SlideSorter", () => {
         expect(slide).toHaveAttribute("data-dragging", "false");
     });
 
+    it("reorders when a slide is dragged backwards", () => {
+        render(<SlideSorter />);
+        const dataTransfer = makeDataTransfer();
+
+        fireEvent.dragStart(screen.getByTestId("slide-s4"), { dataTransfer });
+        fireEvent.dragOver(screen.getByTestId("slide-s1"), { dataTransfer });
+        fireEvent.drop(screen.getByTestId("slide-s1"), { dataTransfer });
+
+        expect(titles()).toEqual(["Q&A", "Opening", "Roadmap", "Demo"]);
+    });
+
+    it("clears the ghost after a drop and can reorder again", () => {
+        render(<SlideSorter />);
+
+        const first = makeDataTransfer();
+        fireEvent.dragStart(screen.getByTestId("slide-s1"), {
+            dataTransfer: first,
+        });
+        fireEvent.dragOver(screen.getByTestId("slide-s3"), {
+            dataTransfer: first,
+        });
+        fireEvent.drop(screen.getByTestId("slide-s3"), { dataTransfer: first });
+
+        expect(titles()).toEqual(["Roadmap", "Opening", "Demo", "Q&A"]);
+        // A completed drag leaves no ghost either.
+        expect(
+            screen
+                .getAllByTestId(/^slide-/)
+                .some((el) => el.getAttribute("data-dragging") === "true")
+        ).toBe(false);
+
+        const second = makeDataTransfer();
+        fireEvent.dragStart(screen.getByTestId("slide-s4"), {
+            dataTransfer: second,
+        });
+        fireEvent.dragOver(screen.getByTestId("slide-s1"), {
+            dataTransfer: second,
+        });
+        fireEvent.drop(screen.getByTestId("slide-s1"), {
+            dataTransfer: second,
+        });
+
+        expect(titles()).toEqual(["Roadmap", "Q&A", "Opening", "Demo"]);
+    });
+
+    it("leaves the deck alone when a slide is dropped on itself", () => {
+        render(<SlideSorter />);
+        const dataTransfer = makeDataTransfer();
+
+        fireEvent.dragStart(screen.getByTestId("slide-s2"), { dataTransfer });
+        fireEvent.dragOver(screen.getByTestId("slide-s2"), { dataTransfer });
+        fireEvent.drop(screen.getByTestId("slide-s2"), { dataTransfer });
+
+        expect(titles()).toEqual(["Opening", "Roadmap", "Demo", "Q&A"]);
+        expect(screen.getByTestId("slide-s2")).toHaveAttribute(
+            "data-dragging",
+            "false"
+        );
+    });
+
     it("renders all four slides in order", () => {
         render(<SlideSorter />);
 
