@@ -46,7 +46,10 @@ what `useUserRepos` puts in its key — and what it leaves out.
 ## Requirements for the Fix
 
 - Switching profiles must show that profile's repos (encoded in
-  `RepoExplorer.test.tsx`), with the previous profile's rows gone.
+  `RepoExplorer.test.tsx`), with the previous profile's rows gone — for
+  every profile, not just the one the ticket names.
+- Coming **back** to a profile already loaded is a cache hit: no spinner.
+  This is what rules out clearing the cache or refetching on click.
 - The initial load must still work with a loading state (also encoded).
 - Do not bypass the cache (no `refetch()` on click, no
   `queryClient.clear()`, no keys with `Math.random()`). The fix is the

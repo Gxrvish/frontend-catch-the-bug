@@ -37,6 +37,37 @@ describe("RepoExplorer", () => {
         expect(screen.queryByText("nova-cli")).not.toBeInTheDocument();
     });
 
+    it("shows each profile's repos when cycling through all three", async () => {
+        renderExplorer();
+        expect(await screen.findByText("nova-cli")).toBeInTheDocument();
+
+        fireEvent.click(screen.getByText("@pixel-forge"));
+        expect(await screen.findByText("shader-lab")).toBeInTheDocument();
+        expect(screen.queryByText("nova-cli")).not.toBeInTheDocument();
+
+        fireEvent.click(screen.getByText("@quantum-cat"));
+        expect(await screen.findByText("qsim")).toBeInTheDocument();
+        expect(screen.queryByText("shader-lab")).not.toBeInTheDocument();
+    });
+
+    it("serves a profile it has already loaded from cache", async () => {
+        renderExplorer();
+        expect(await screen.findByText("nova-cli")).toBeInTheDocument();
+
+        fireEvent.click(screen.getByText("@quantum-cat"));
+        expect(await screen.findByText("qsim")).toBeInTheDocument();
+
+        fireEvent.click(screen.getByText("@nova-dev"));
+
+        // Coming back is a cache hit, not a fresh load — clearing the
+        // cache or refetching on click would show the spinner again.
+        expect(screen.queryByText("Loading repos…")).not.toBeInTheDocument();
+        expect(screen.getByText("nova-cli")).toBeInTheDocument();
+        expect(screen.getByTestId("profile-header")).toHaveTextContent(
+            "@nova-dev"
+        );
+    });
+
     it("loads the initial profile's repos", async () => {
         renderExplorer();
 
