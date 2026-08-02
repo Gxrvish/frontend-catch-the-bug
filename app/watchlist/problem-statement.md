@@ -9,7 +9,7 @@ each card and panel so rendering behavior is visible.
 
 QA at a streaming-scale company filed two tickets against this page:
 
-1. "**Add to My List does nothing.** But if you press *Refresh Trending*
+1. "**Add to My List does nothing.** But if you press _Refresh Trending_
    afterwards, the title suddenly appears in My List. Remove works instantly."
 2. "**Typing in the filter box makes every card's render badge climb** — even the
    My List panel, which doesn't care about the filter, re-renders on every
@@ -25,7 +25,7 @@ store, and what that store is contractually required to do.
 ### A. The dead Add button
 
 1. Click **+ Add to My List** on any title.
-2. Nothing on screen changes. The state *did* change — but no component was told.
+2. Nothing on screen changes. The state _did_ change — but no component was told.
 3. Click **Refresh Trending** (a legitimate store update).
 4. The earlier add suddenly becomes visible, piggybacking on the unrelated update.
 
@@ -53,9 +53,13 @@ filter box and watch the badges.
 ## Requirements for the Fix
 
 - Adding a title must appear in the UI immediately, and previous state snapshots
-  must never be mutated (`watchlistStore.test.ts` encodes both).
+  must never be mutated (`watchlistStore.test.ts` encodes both). The add
+  produces a **new** array, leaves its neighbours exactly as they were, and
+  a title round-trips in and out of the list.
 - The My List panel must not re-render when only the filter text changes
-  (`MyListPanel.test.tsx` encodes this).
+  (`MyListPanel.test.tsx` encodes this) — but it must still re-render when
+  the saved list itself changes. Quiet for the filter is not the same as
+  quiet for everything.
 - Keep a single zustand store — no context providers, no lifting state.
 - Hints worth researching: how zustand v5 uses `useSyncExternalStore`, selector
   granularity, and `useShallow` for derived arrays.

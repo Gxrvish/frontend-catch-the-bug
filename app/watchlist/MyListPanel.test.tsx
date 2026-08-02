@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, render } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MyListPanel } from "./MyListPanel";
@@ -25,5 +25,25 @@ describe("MyListPanel", () => {
         });
 
         expect(onRender.mock.calls.length).toBe(rendersAfterMount);
+    });
+
+    it("re-renders when the saved list actually changes", () => {
+        const onRender = vi.fn();
+        render(<MyListPanel onRender={onRender} />);
+        const before = onRender.mock.calls.length;
+
+        act(() => {
+            useWatchlistStore.getState().addToList("t-3");
+        });
+
+        // Quiet for the filter is not the same as quiet for everything.
+        expect(onRender.mock.calls.length).toBeGreaterThan(before);
+        expect(screen.getByText("The Last Ledger")).toBeInTheDocument();
+
+        act(() => {
+            useWatchlistStore.getState().removeFromList("t-3");
+        });
+
+        expect(screen.queryByText("The Last Ledger")).not.toBeInTheDocument();
     });
 });
