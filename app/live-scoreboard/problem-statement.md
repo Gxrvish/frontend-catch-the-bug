@@ -7,7 +7,7 @@ the full current score plus a `seq` number assigned when the event was
 produced. The relay's documented contract (see the comment in
 `scoreSocket.ts`) is blunt: events fan out across edge nodes and **delivery
 order is not guaranteed** — consumers must order by `seq`. The fake socket
-replays a captured production burst in which seq 2 arrives *after* seq 3.
+replays a captured production burst in which seq 2 arrives _after_ seq 3.
 
 QA ticket from a sports-streaming-scale company: "Viewers saw the score go
 2–1... and then flip **back** to 1–1 and stay there. Social media had the
@@ -25,7 +25,7 @@ stale.
 
 1. Open `/live-scoreboard`.
 2. seq 1 arrives: 1–0. seq 3 arrives: 2–1. So far so good.
-3. seq 2 (delayed) arrives: 1–1. The board *goes backwards* to 1–1 and
+3. seq 2 (delayed) arrives: 1–1. The board _goes backwards_ to 1–1 and
    freezes there — that was the final delivery.
 
 ## Fast Reproduction Path
@@ -39,11 +39,11 @@ stale.
 
 The comment in the effect asserts the relay "runs over TCP, so events
 arrive in the order they were sent." The relay's own docs say the opposite
-— TCP orders bytes on *one* connection, but the relay fans out over many
+— TCP orders bytes on _one_ connection, but the relay fans out over many
 paths. This is the fundamental problem of distributed real-time sync:
 delivery order ≠ production order. The producer already solved it for you
 by stamping every event with a monotonically increasing `seq`; the consumer
-just has to *use* it — remember the newest sequence applied and refuse to
+just has to _use_ it — remember the newest sequence applied and refuse to
 apply anything older. Applied this way, event handling also becomes
 idempotent: replaying a duplicate is harmless.
 
@@ -51,6 +51,15 @@ idempotent: replaying a duplicate is harmless.
 
 - After the scripted burst, the board must show the newest score (2–1),
   not the last-delivered one — encoded in `LiveScoreboard.test.tsx`.
+- The **caption** comes from the same event as the score: a stale event
+  must not leave its note on screen either.
+- Ordering holds whatever the delivery order is — newest first, then the
+  events it supersedes — and re-delivering one already applied changes
+  nothing.
+- Keeping the highest numbers seen is not ordering: a newer event may
+  take a goal away (VAR), and that correction must land.
+- Unmounting stops the board listening; the events still in flight must
+  not reach a discarded tree.
 - The kick-off state (0–0) must still render before events arrive (guard
   test).
 - Fix the consumer's event handling — do not edit the socket script to
