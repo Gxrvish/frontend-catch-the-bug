@@ -32,27 +32,32 @@ telemetry dashboard thinks the page has 40 panels.
 Refs are populated during React's **commit** phase — after render output
 is applied to the DOM. Neither bug makes sense until that sentence does.
 
-- **A:** inside the click handler, `setEditing(true)` only *schedules* a
+- **A:** inside the click handler, `setEditing(true)` only _schedules_ a
   re-render. The input doesn't exist yet; `inputRef.current` is still
   `null`, the `?.` swallows it, and by the time the input mounts nobody
-  calls focus. The focus call needs to run *after* the commit that
+  calls focus. The focus call needs to run _after_ the commit that
   creates the input — where does React let you run code after commit,
   keyed to a state change? (There's also a one-attribute declarative
   answer.)
 - **B:** the ref is an **inline function**, so every render produces a
-  *new* ref callback. React sees a different callback and re-runs the
+  _new_ ref callback. React sees a different callback and re-runs the
   attach cycle each render — that's one `trackElement` per keystroke.
   And the comment's claim that "React detaches refs automatically" is
-  only half-true: React calls your callback again, but *this* callback
+  only half-true: React calls your callback again, but _this_ callback
   ignores the detach signal and never untracks. React 19 lets a ref
   callback **return a cleanup function** — pair every track with an
   untrack, and give the callback a stable identity so the pair runs once.
 
 ## Requirements for the Fix
 
-- Edit focuses the input (Red A).
-- Exactly one telemetry registration no matter how much is typed (Red
-  B) — and the element should be untracked when it unmounts.
+- Edit focuses the input (Red A) — **every** time editing starts, not
+  only the first. Focusing once on mount is a different thing (Red A2).
+- Exactly one telemetry registration no matter how much is typed (Red B),
+  and still exactly one after toggling in and out of edit mode: the card
+  root never unmounts, so it never re-registers (Red B2).
+- The element is untracked when it unmounts — a registration that
+  outlives the panel holds an observer slot for a node that is gone
+  (Red B3).
 - Edit → type → Save round trip still works (guard).
 - Research topics: render vs commit phases and when refs attach, effects
   as the post-commit hook (`useEffect` + `[editing]`), `autoFocus`,
