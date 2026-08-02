@@ -25,6 +25,36 @@ describe("PhotoGallery", () => {
         expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
     });
 
+    it("does not open the lightbox when confirming the delete", () => {
+        render(<PhotoGallery />);
+
+        fireEvent.click(screen.getByLabelText("delete Harbor Sunrise"));
+        fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+        // Confirming travels the same path Cancel does.
+        expect(screen.queryByTestId("lightbox")).not.toBeInTheDocument();
+        expect(
+            within(screen.getByTestId("photo-grid")).queryByText(
+                "Harbor Sunrise"
+            )
+        ).not.toBeInTheDocument();
+    });
+
+    it("keeps clicks inside the dialog inert, and still closes on a real outside click", () => {
+        render(<PhotoGallery />);
+
+        fireEvent.click(screen.getByLabelText("delete Foggy Pier"));
+        fireEvent.click(screen.getByText("Delete this photo?"));
+
+        expect(screen.getByTestId("confirm-dialog")).toBeInTheDocument();
+        expect(screen.queryByTestId("lightbox")).not.toBeInTheDocument();
+
+        // Outside really is outside — dismissal must keep working.
+        fireEvent.click(screen.getByText("Field Trip Album"));
+        expect(screen.queryByTestId("confirm-dialog")).not.toBeInTheDocument();
+        expect(screen.queryByTestId("lightbox")).not.toBeInTheDocument();
+    });
+
     it("opens the lightbox from a card and deletes via the dialog", () => {
         render(<PhotoGallery />);
 
