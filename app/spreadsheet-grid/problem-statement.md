@@ -11,7 +11,7 @@ its true colors once the first is fixed.
 
 Cell C1 is `=A1+B2`. Change A1 from 2 to 10 and C1 stays 5. The formula
 is right, the dependency is right, the displayed sum is stale. Editing
-the *formula text* updates a cell; editing a cell it *depends on* does
+the _formula text_ updates a cell; editing a cell it _depends on_ does
 not.
 
 ## Ticket B — "Circular references should say so, not silently lie / crash"
@@ -30,7 +30,7 @@ the tab down**. Both failure modes are unacceptable.
 
 - **A (cache-key completeness):** `evaluate` memoizes on the **formula
   string alone** — `cache.set(formula, total)`. But a formula's result
-  depends on the *values of the cells it references*, which the key
+  depends on the _values of the cells it references_, which the key
   ignores. `=A1+B2` maps to one cache slot forever, so once computed it
   never reflects a changed A1. A memo key must include everything the
   result depends on; here that's the referenced cells' current values
@@ -38,7 +38,7 @@ the tab down**. Both failure modes are unacceptable.
   generation counter). This is textbook cache poisoning.
 - **B (cycle detection — the escalation):** there is no cycle guard;
   `evaluate` recurses into references trusting the comment that they
-  "always bottom out at a literal." Right now the *broken* cache
+  "always bottom out at a literal." Right now the _broken_ cache
   accidentally hides the infinite recursion (a half-populated entry
   short-circuits it) — which is why you see a stale number, not a crash.
   The moment you fix the cache in Ticket A, the recursion is unmasked and
@@ -49,9 +49,14 @@ the tab down**. Both failure modes are unacceptable.
 
 ## Requirements for the Fix
 
-- Changing a referenced cell updates dependent formulas (Red A).
+- Changing a referenced cell updates dependent formulas (Red A) — all
+  the way down a chain, not just the cell that references the edit
+  directly (Red A2).
 - A circular reference renders `#CYCLE!` in the involved cells, no crash,
-  no hang (Red B).
+  no hang (Red B) — a self-reference and a three-cell loop alike
+  (Red B2).
+- Breaking the cycle brings the cells back: the marker is a state of the
+  graph, not a latch (Red B3).
 - Literals and a one-level formula still evaluate on load (guard).
 - Keep the memo cache (don't just delete it and re-evaluate everything
   blindly if you can key it correctly) and keep evaluation happening in
