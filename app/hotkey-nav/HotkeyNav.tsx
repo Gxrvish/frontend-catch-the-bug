@@ -29,9 +29,7 @@ export const HotkeyNav = () => {
     return (
         <main className="min-h-screen bg-gray-100 p-8">
             <div className="mx-auto max-w-md space-y-3">
-                <h2 className="text-xl font-semibold text-gray-900">
-                    Folders
-                </h2>
+                <h2 className="text-xl font-semibold text-gray-900">Folders</h2>
 
                 <input
                     data-testid="search"
