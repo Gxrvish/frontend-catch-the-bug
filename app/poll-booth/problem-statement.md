@@ -15,7 +15,7 @@ the increment twice — the comment even says "two increments, two votes"
 
 ## Ticket B — "Server tally is always one behind"
 
-Cast & submit shows the right count on screen but reports the *previous*
+Cast & submit shows the right count on screen but reports the _previous_
 count to the server. First submit on a fresh option reports `0`. Finance
 reconciles totals nightly and the client-reported tallies never match.
 
@@ -33,19 +33,23 @@ assignment that takes effect on the next line. It isn't. A state setter
 snapshot from the render that created the handler, no matter how many
 setters you've called since.
 
-- Ticket A: both `addVote` calls compute `votes[id] + 1` from the *same*
+- Ticket A: both `addVote` calls compute `votes[id] + 1` from the _same_
   snapshot — the second enqueued update overwrites, not stacks. There's a
   setter form that receives the queue's latest value as an argument
   instead of closing over the render's copy.
 - Ticket B: the line after the setter reads the old snapshot — of course
-  it does; nothing re-ran yet. If the handler needs the new value *now*,
+  it does; nothing re-ran yet. If the handler needs the new value _now_,
   compute it as a local first, then hand that same local to both the
   setter and the API.
 
 ## Requirements for the Fix
 
-- +2 Boost yields exactly 2 new votes (Red A).
-- Cast & submit reports the count *including* the vote just cast (Red B).
+- +2 Boost yields exactly 2 new votes (Red A), and keeps doing so across
+  repeated boosts mixed with plain votes — while every other option's
+  tally stays put (Red A2).
+- Cast & submit reports the count _including_ the vote just cast (Red B),
+  and including everything cast before it: what is reported has to be
+  what is on screen (Red B2).
 - Options render; plain +1 across separate clicks still accumulates
   (guard).
 - Research topics: state as a snapshot (React docs "State as a
