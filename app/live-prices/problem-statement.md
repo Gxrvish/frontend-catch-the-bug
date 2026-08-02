@@ -40,9 +40,9 @@ exist, so every update is processed twice.
 
 ## Root Cause Summary
 
-An effect's cleanup must undo *exactly* what the effect did. This effect
+An effect's cleanup must undo _exactly_ what the effect did. This effect
 registers one function with the socket and asks the socket to remove a
-*different* one — the removal is a set-delete of a reference that was never
+_different_ one — the removal is a set-delete of a reference that was never
 in the set, so it silently does nothing. Look very carefully at what value
 is passed to `priceSocket.on(...)` and what value is passed to
 `priceSocket.off(...)`, and ask whether they can ever be `===`.
@@ -55,6 +55,13 @@ production.
 
 - After mounting under StrictMode: exactly 1 socket listener, and one tick
   increments the counter by exactly 1 (encoded in `LivePrices.test.tsx`).
+- **Unmounting returns the listener count to 0.** A guard that merely
+  avoids the second subscribe satisfies the count-of-1 test and still
+  leaves a listener behind for the life of the process.
+- Mount → unmount → mount again lands back on exactly 1 listener, and
+  ticks still arrive.
+- A burst of three ticks reads as three updates, with the on-screen
+  listener badge showing 1.
 - Ticks must still update the price table (also encoded).
 - Do not remove `<StrictMode>`, do not guard with an `isSubscribed` ref, do
   not debounce the counter — fix the cleanup symmetry itself. Research
