@@ -50,9 +50,13 @@ opens.
 
 ## Requirements for the Fix
 
-- Reconnecting closes the old socket; a tick is delivered once (Red A).
-- Every message is appended, not overwritten (Red B).
-- A message sent before open is delivered once the socket opens (Red C).
+- Reconnecting closes the old socket; a tick is delivered once (Red A) —
+  and unmounting closes the socket too (Red A2).
+- Every message is appended, not overwritten (Red B), including across a
+  reconnect: both the stale closure and the leak hide there (Red B2).
+- A message sent before open is delivered once the socket opens (Red C) —
+  several queued sends flush in order, and once the socket is open a send
+  goes straight out rather than queueing again (Red C2).
 - A single received message renders once (guard).
 - Research topics: WebSocket lifecycle inside effects (open/close/cleanup)
   and connection leaks, stale closures over state in long-lived handlers,
