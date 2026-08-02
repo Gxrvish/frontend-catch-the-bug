@@ -17,7 +17,7 @@ large share of the user base.
 ## Ticket B — "Some invite links say 'Broken link'"
 
 Certain teams' links fail on arrival with a JSON parse error — reliably,
-for the same teams, every time. The code generated fine; it's the *link*
+for the same teams, every time. The code generated fine; it's the _link_
 that delivers a corrupted code.
 
 ## Fast Reproduction Path
@@ -34,7 +34,7 @@ that delivers a corrupted code.
   Real text must first become bytes (`TextEncoder`), and the bytes get
   base64'd (and `TextDecoder` on the way back).
 - **B:** standard base64 uses `+`, `/` and `=` — all three mean something
-  in a URL. In a query string a `+` *is a space*: `URLSearchParams` hands
+  in a URL. In a query string a `+` _is a space_: `URLSearchParams` hands
   the join page a code with a space where the `+` was, and `atob` /
   `JSON.parse` chokes. Codes that travel in URLs use the **base64url**
   alphabet (`-`, `_`, padding stripped) — or get percent-encoded.
@@ -42,9 +42,13 @@ that delivers a corrupted code.
 
 ## Requirements for the Fix
 
-- Unicode team names encode, and round-trip back intact (Red A).
+- Unicode team names encode, and round-trip back intact (Red A) —
+  Japanese, Greek, Hebrew, emoji and combining marks alike (Red A2).
 - Every code survives the URL trip — encode → link → parse → decode
-  (Red B).
+  (Red B) — including codes containing `/` as well as `+`; both are
+  syntax inside a query string (Red B2).
+- The empty edges hold: an empty team name and zero seats round-trip, and
+  seats stay a number (Red C).
 - A plain ASCII invite still round-trips (guard).
 - Research topics: `btoa`/`atob` binary-string semantics,
   `TextEncoder`/`TextDecoder`, base64 vs base64url alphabets, and what

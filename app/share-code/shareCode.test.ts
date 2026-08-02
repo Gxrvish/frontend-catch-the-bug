@@ -23,6 +23,38 @@ describe("shareCode", () => {
         expect(inviteFromUrl(inviteUrl(state))).toEqual(state);
     });
 
+    it("encodes every kind of non-latin-1 name", () => {
+        for (const team of [
+            "設計チーム",
+            "Ωmega squad",
+            "café ☕ crew",
+            "אבטחה",
+            "e\u0301quipe",
+        ]) {
+            const state = { team, seats: 4 };
+            expect(() => encodeInvite(state)).not.toThrow();
+            expect(decodeInvite(encodeInvite(state))).toEqual(state);
+        }
+    });
+
+    it("survives the URL trip for codes containing + and /", () => {
+        // "team ~aa" encodes with a "+", "team ?aa" with a "/" — both are
+        // syntax inside a query string.
+        for (const team of ["team ~aa", "team ?aa"]) {
+            const state = { team, seats: 7 };
+            expect(inviteFromUrl(inviteUrl(state))).toEqual(state);
+        }
+    });
+
+    it("handles the empty edges", () => {
+        const state = { team: "", seats: 0 };
+
+        expect(decodeInvite(encodeInvite(state))).toEqual(state);
+        expect(inviteFromUrl(inviteUrl(state))).toEqual(state);
+        // Seats stay a number, not the string JSON round-trips to.
+        expect(typeof inviteFromUrl(inviteUrl(state)).seats).toBe("number");
+    });
+
     it("round-trips a plain invite", () => {
         const state = { team: "atlas", seats: 3 };
 
