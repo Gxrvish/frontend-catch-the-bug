@@ -43,6 +43,51 @@ describe("VideoUploader", () => {
         expect(screen.getByRole("button", { name: "Upload" })).toBeEnabled();
     });
 
+    it("shows at most one outcome at a time", async () => {
+        render(<VideoUploader />);
+        const exclusive = () =>
+            [
+                screen.queryByTestId("upload-spinner"),
+                screen.queryByTestId("error-banner"),
+                screen.queryByTestId("done-banner"),
+            ].filter(Boolean).length;
+
+        fireEvent.click(screen.getByRole("button", { name: "Select clip" }));
+        fireEvent.click(screen.getByRole("button", { name: "Upload" }));
+        expect(exclusive()).toBe(1);
+
+        await settle();
+        expect(exclusive()).toBe(1);
+        expect(screen.getByTestId("error-banner")).toBeInTheDocument();
+
+        // Retrying is in progress, not still failed.
+        fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+        expect(exclusive()).toBe(1);
+        expect(screen.queryByTestId("error-banner")).not.toBeInTheDocument();
+
+        await settle();
+        expect(exclusive()).toBe(1);
+        expect(screen.getByTestId("done-banner")).toBeInTheDocument();
+    });
+
+    it("can upload again after a cancel", async () => {
+        render(<VideoUploader />);
+
+        fireEvent.click(screen.getByRole("button", { name: "Select clip" }));
+        fireEvent.click(screen.getByRole("button", { name: "Upload" }));
+        fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+        await settle();
+
+        fireEvent.click(screen.getByRole("button", { name: "Upload" }));
+        await settle();
+
+        // The cancelled attempt used up the transcoder's one failure, so
+        // this one completes.
+        expect(screen.getByTestId("done-banner")).toBeInTheDocument();
+        expect(screen.queryByTestId("error-banner")).not.toBeInTheDocument();
+        expect(screen.queryByTestId("upload-spinner")).not.toBeInTheDocument();
+    });
+
     it("walks the happy path: fail once, retry to completion", async () => {
         render(<VideoUploader />);
 
