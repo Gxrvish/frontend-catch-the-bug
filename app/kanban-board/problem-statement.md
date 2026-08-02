@@ -50,6 +50,13 @@ an API that does not exist.
 
 - Clicking a card's arrow must immediately show the card in the next column
   — encoded in `KanbanBoard.test.tsx`.
+- The same card moves forward twice in a row (To do → In progress → Done).
+- The column counts in the headings keep up with the cards.
+- The move touches nothing else: the card joins the end of its new column,
+  the card already there keeps its place, and the other columns are
+  untouched.
+- Toggling dark mode repaints and nothing more — it must not be what
+  reveals a move, and it must not move anything of its own.
 - All seeded cards must still render in their starting columns (also
   encoded).
 - Fix the state update itself — do not add force-update hacks or extra
