@@ -42,7 +42,7 @@ All three are clauses of the `FormData` serialization contract:
 
 - **A:** a `disabled` control is excluded from form submission — by spec,
   disabled means "not part of this form right now". The plan field only
-  needs to be *uneditable*, which is a different attribute with different
+  needs to be _uneditable_, which is a different attribute with different
   submission behavior.
 - **B:** an unchecked checkbox contributes **nothing** to `FormData` — no
   key, no `"false"`. `Object.fromEntries(formData)` therefore can't
@@ -53,9 +53,16 @@ All three are clauses of the `FormData` serialization contract:
 
 ## Requirements for the Fix
 
-- Saving keeps `plan: "pro"` in the stored record (Red A).
-- Unchecking email alerts stores `emailAlerts: false` (Red B).
-- Digest hour 9 confirms a follow-up at 10:00 (Red C).
+- Saving keeps `plan: "pro"` in the stored record (Red A) — while the
+  field stays locked on screen. Unlocking it would carry the value and
+  hand the user a billing control this page is not allowed to offer
+  (Red A2).
+- Unchecking email alerts stores `emailAlerts: false` (Red B) — and
+  leaving it on stores `true`, not the `"on"` the form actually sends
+  (Red B2).
+- Digest hour 9 confirms a follow-up at 10:00 (Red C), and the stored
+  `digestHour` is a **number** (Red C2).
+- One save writes the whole record with the right types (Red D).
 - The webhook URL still round-trips (guard).
 - Research topics: which controls participate in form submission
   (`disabled` vs `readonly`), how checkboxes serialize (present-or-absent,
