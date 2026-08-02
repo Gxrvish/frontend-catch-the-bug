@@ -36,10 +36,10 @@ actually produced any data.
 
 ## Root Cause Hints
 
-- **A:** `saveNote` opens the `readwrite` transaction and *then* `await`s
+- **A:** `saveNote` opens the `readwrite` transaction and _then_ `await`s
   `normalize(...)` before calling `store.put`. An IDB transaction is only
   active for the current task turn — the moment you `await` and control
-  returns to the event loop, it deactivates. Do any async work *before*
+  returns to the event loop, it deactivates. Do any async work _before_
   opening the transaction, then keep all store operations synchronous
   within it.
 - **B:** the `onupgradeneeded` handler creates the `notes` object store
@@ -52,9 +52,14 @@ actually produced any data.
 
 ## Requirements for the Fix
 
-- A saved note persists — no `TransactionInactiveError` (Red A).
-- Pinned notes can be queried through the index (Red B).
-- A read returns the rows it fetched (Red C).
+- A saved note persists — no `TransactionInactiveError` (Red A) — and it
+  is still **normalised** on the way in. Dropping the trim to dodge the
+  await is not a fix (Red A2).
+- Pinned notes can be queried through the index (Red B), and the index
+  stays correct once new notes are saved alongside the pinned ones
+  (Red B2).
+- A read returns the rows it fetched (Red C), including an empty store,
+  and each saved note gets its own key (Red C2).
 - Two saved notes round-trip in insertion order (guard).
 - Don't edit `idb.ts`; fix the usage in `notesDb.ts`. Research topics:
   IndexedDB transaction auto-close / active window, `onupgradeneeded` and
