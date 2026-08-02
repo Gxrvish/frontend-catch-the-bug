@@ -10,8 +10,8 @@ they're related.
 
 ## Ticket A — "Ghost draft from the last conversation"
 
-A user half-typed a reply to *Quarterly roadmap review*, clicked *Design
-tokens migration* in the list — and the composer still contained the
+A user half-typed a reply to _Quarterly roadmap review_, clicked _Design
+tokens migration_ in the list — and the composer still contained the
 roadmap draft, now addressed to the wrong thread. One near-miss already
 escalated: a draft meant for a manager almost went to an external vendor.
 
@@ -36,29 +36,34 @@ directly into forward mode.
 
 ## Root Cause Hints
 
-Notice what *does* update in both tickets: the subject line. It's computed
+Notice what _does_ update in both tickets: the subject line. It's computed
 from props on every render. The body is different — it's `useState`, and
-its initializer runs exactly once *per component instance*. So the real
+its initializer runs exactly once _per component instance_. So the real
 question is: when you switch conversation or mode, does React create a new
 `Composer` instance, or quietly hand the old instance new props?
 
 React preserves an instance (and all its state) as long as the same
-component *type* renders at the same *position* in the tree. Look at the
+component _type_ renders at the same _position_ in the tree. Look at the
 JSX around the composer: two branches of a ternary, same type, same slot —
 and the comment above it describes behavior React never promised. Reread
 what identity means to the reconciler, then find the one attribute that
-lets you *tell* React "this is a different composer now."
+lets you _tell_ React "this is a different composer now."
 
 ## Requirements for the Fix
 
 - Switching conversation starts a fresh (empty) reply draft — encoded in
-  `MailComposer.test.tsx` (Ticket A test).
+  `MailComposer.test.tsx` (Ticket A test) — and **returning** to a
+  conversation is a new draft too, not the one abandoned earlier.
 - Switching to Forward shows the quoted original of the selected
-  conversation (Ticket B test).
+  conversation (Ticket B test), in both directions: Forward → Reply is
+  empty, and Reply → Forward is the quote again rather than the reply
+  draft.
+- Forward quotes the conversation that is actually selected, with the
+  matching `Fwd:` subject.
 - The conversation list and props-driven subject line keep working (guard
   test).
 - Don't rewrite the composer to sync state from props inside an effect —
-  the initializer-based design is fine; fix the *identity* of the
+  the initializer-based design is fine; fix the _identity_ of the
   component instance. Research topics: how reconciliation decides to mount
   vs update, state preservation by (type, position), `key` as an identity
   override outside of lists, "resetting state with a key" in the React
