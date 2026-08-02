@@ -45,7 +45,12 @@ as renderable state. This form isn't using it.
 ## Requirements for the Fix
 
 - A double-click on submit must record exactly one waitlist entry — encoded
-  in `WaitlistSignup.test.tsx`.
+  in `WaitlistSignup.test.tsx` — and a whole burst of clicks is no
+  different.
+- The button must be **disabled while the signup is in flight**: saying so
+  mid-flight is the point, not swallowing the second click after the fact.
+- The guard is per submit, not a one-shot latch: a second person can sign
+  up straight afterwards.
 - A normal single submit must still confirm the spot with no error banner
   (also encoded).
 - Stay on the form-action model (no `onSubmit`/`preventDefault` retreat).
