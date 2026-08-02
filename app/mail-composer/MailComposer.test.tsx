@@ -37,6 +37,61 @@ describe("MailComposer", () => {
         );
     });
 
+    it("starts fresh again when returning to a conversation", () => {
+        render(<MailComposer />);
+        const body = () => screen.getByLabelText("message body");
+
+        fireEvent.change(body(), { target: { value: "Draft for Priya" } });
+        fireEvent.click(
+            screen.getByRole("button", { name: /Design tokens migration/ })
+        );
+        fireEvent.change(body(), { target: { value: "Draft for Jonas" } });
+
+        fireEvent.click(
+            screen.getByRole("button", { name: /Quarterly roadmap review/ })
+        );
+
+        // Coming back is a new draft too, not the one abandoned earlier.
+        expect(body()).toHaveValue("");
+    });
+
+    it("resets the body on a mode switch in both directions", () => {
+        render(<MailComposer />);
+        const body = () => screen.getByLabelText("message body");
+
+        fireEvent.click(screen.getByRole("button", { name: "forward" }));
+        fireEvent.change(body(), { target: { value: "FYI — see below." } });
+
+        fireEvent.click(screen.getByRole("button", { name: "reply" }));
+        expect(body()).toHaveValue("");
+        expect(screen.getByTestId("composer-subject")).toHaveTextContent(
+            "Re: Quarterly roadmap review"
+        );
+
+        // …and forward starts from the quote again, not the reply draft.
+        fireEvent.change(body(), { target: { value: "Thanks!" } });
+        fireEvent.click(screen.getByRole("button", { name: "forward" }));
+        expect(body()).toHaveValue(
+            "\n\n---------- Forwarded message ----------\nFrom: Priya Nair\n\nDraft agenda attached — please add your items before Thursday."
+        );
+    });
+
+    it("quotes the conversation that is actually selected", () => {
+        render(<MailComposer />);
+
+        fireEvent.click(
+            screen.getByRole("button", { name: /On-call handover notes/ })
+        );
+        fireEvent.click(screen.getByRole("button", { name: "forward" }));
+
+        expect(screen.getByLabelText("message body")).toHaveValue(
+            "\n\n---------- Forwarded message ----------\nFrom: Sofia Reyes\n\nTwo open incidents, both low severity. Runbook links inside."
+        );
+        expect(screen.getByTestId("composer-subject")).toHaveTextContent(
+            "Fwd: On-call handover notes"
+        );
+    });
+
     it("lists all conversations and shows the selected subject", () => {
         render(<MailComposer />);
 
