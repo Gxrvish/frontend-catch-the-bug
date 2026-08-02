@@ -36,7 +36,7 @@ with `Object.is`, reference by reference. Now read the call site in
 
 - `options={{ symbols: WATCHED_SYMBOLS }}` — an object literal in JSX.
   What does that expression produce on every parent render, even though
-  its *contents* never change?
+  its _contents_ never change?
 - `onAlert={(tick) => ...}` — same question for the arrow function.
 
 Any parent re-render (a filter keystroke, an alert landing in state)
@@ -48,11 +48,16 @@ is part of a component's API contract.
 
 ## Requirements for the Fix
 
-- Typing in the filter must not reconnect (Red A).
+- Typing in the filter must not reconnect (Red A) — and must not
+  disconnect either. A reconnect also keeps the ticks coming, by
+  restarting the script and paying for another connection (Red A2).
 - Exactly one connection while alerts arrive (Red B).
+- Stability is not deafness: `FeedPanel` given a genuinely different
+  `options` must still re-subscribe, and unmounting disconnects exactly
+  once (Red B2). This is what rules out emptying the dependency array.
 - Tick prices render; the filter still narrows the watchlist (guard).
 - Don't fix it by lying to the effect (emptying its dependency array or
-  suppressing the lint rule) — make the *inputs* stable instead. Research
+  suppressing the lint rule) — make the _inputs_ stable instead. Research
   topics: how effect deps are compared, `useMemo`/`useCallback`/hoisting
   for referential stability, "removing effect dependencies" in the React
   docs, why unstable props are an API-design smell for subscription
