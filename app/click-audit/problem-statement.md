@@ -31,7 +31,7 @@ fraction of users hit the label — which is most of them.
 
 - **A:** an event travels **down** (capture phase) from `document` to the
   target, then **back up** (bubble phase). `stopPropagation()` in the
-  widget's bubble-phase handler kills the trip *up* — but the trip *down*
+  widget's bubble-phase handler kills the trip _up_ — but the trip _down_
   already happened. A `document` listener registered for the **capture
   phase** runs before any target handler can silence anything.
 - **B:** `event.target` is the innermost element hit — the `<span>` label,
@@ -44,6 +44,14 @@ fraction of users hit the label — which is most of them.
 - A CTA inside a propagation-stopping widget is audited, and the widget
   still works (Red A).
 - A click on a child element of a CTA is attributed to the CTA (Red B).
+- Both repairs hold at once and in order: label click, promo click, direct
+  click → three entries, one each (Red C).
+- The on-screen count keeps up with the log (Red D).
+- Clicks that land outside every CTA are still ignored — walking up from
+  the target stops at the nearest opt-in ancestor rather than auditing
+  everything on the way to `<html>` (Red E).
+- The listener dies with the component: after unmount, a stray
+  `data-cta` click is not audited (Red F).
 - A direct CTA click is audited exactly once — no double counting from
   listening in two phases (guard).
 - Research topics: DOM event phases (capture → target → bubble),
