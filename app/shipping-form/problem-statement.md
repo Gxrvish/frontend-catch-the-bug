@@ -9,8 +9,8 @@ are variations of one contract violated three different ways.
 
 ## Ticket A — "Console screams when the draft loads"
 
-Every page load logs React's *"A component is changing an uncontrolled
-input to be controlled"* warning, and anything typed before the draft
+Every page load logs React's _"A component is changing an uncontrolled
+input to be controlled"_ warning, and anything typed before the draft
 arrives is silently replaced. CI fails on unexpected console output.
 
 ## Ticket B — "Express shipping can't be enabled"
@@ -40,22 +40,26 @@ and **you** apply every change. All three fields break a different clause:
   reads `value={undefined}` as "uncontrolled, browser owns it", then the
   draft flips it to controlled mid-life — that's the warning, and the
   takeover discards whatever the browser held. The value must be a
-  *string on every render*, including the loading one.
+  _string on every render_, including the loading one.
 - **B:** `checked` with no `onChange` is a fully controlled checkbox that
   never updates its source of truth — React reverts each click to the
   rendered value. The comment about browsers toggling natively describes
   uncontrolled checkboxes (`defaultChecked`), not this one.
 - **C:** `parseInt("")` is `NaN`, which gets stored, stringified to
   `"NaN"`, rendered, and re-parsed. An emptied field is a legitimate
-  *transient* state while typing — the state shape has to allow it
+  _transient_ state while typing — the state shape has to allow it
   (store the raw string and parse on submit, or guard the parse).
 
 ## Requirements for the Fix
 
 - No console warnings across load-then-type (Red A — note the checkbox
-  warning also lands here, the tickets interact).
-- Clicking express toggles it (Red B).
-- Clearing quantity shows an empty field, then typing works (Red C).
+  warning also lands here, the tickets interact), and none while touching
+  **every** field in turn (Red A2).
+- Clicking express toggles it (Red B) — and clicking again turns it back
+  off (Red B2).
+- Clearing quantity shows an **empty** field, then typing works (Red C).
+  Coercing the empty field to `0` also avoids "NaN", and stops the user
+  deleting what they typed (Red C2).
 - Draft loads into all fields and name stays editable (guard).
 - Research topics: controlled vs uncontrolled inputs, the
   `value={undefined}` trap and `?? ""`, `defaultChecked` vs

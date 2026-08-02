@@ -51,6 +51,58 @@ describe("ShippingForm", () => {
         expect(quantity).toHaveValue("3");
     });
 
+    it("clears the quantity to an empty field, not a stand-in number", async () => {
+        render(<ShippingForm />);
+        await settle();
+
+        const quantity = screen.getByLabelText("quantity");
+        fireEvent.change(quantity, { target: { value: "12" } });
+        expect(quantity).toHaveValue("12");
+
+        fireEvent.change(quantity, { target: { value: "" } });
+
+        // Coercing the empty field to 0 also avoids "NaN" — and stops the
+        // user from deleting what they typed.
+        expect(quantity).toHaveValue("");
+
+        fireEvent.change(quantity, { target: { value: "7" } });
+        expect(quantity).toHaveValue("7");
+    });
+
+    it("toggles express shipping back off again", async () => {
+        render(<ShippingForm />);
+        await settle();
+
+        const express = screen.getByLabelText("express shipping");
+        fireEvent.click(express);
+        expect(express).toBeChecked();
+
+        fireEvent.click(express);
+        expect(express).not.toBeChecked();
+    });
+
+    it("stays warning-free across every field", async () => {
+        const errorSpy = vi
+            .spyOn(console, "error")
+            .mockImplementation(() => {});
+
+        render(<ShippingForm />);
+        await settle();
+
+        fireEvent.change(screen.getByLabelText("recipient name"), {
+            target: { value: "Ada M." },
+        });
+        fireEvent.click(screen.getByLabelText("express shipping"));
+        fireEvent.change(screen.getByLabelText("quantity"), {
+            target: { value: "" },
+        });
+        fireEvent.change(screen.getByLabelText("quantity"), {
+            target: { value: "2" },
+        });
+
+        expect(errorSpy).not.toHaveBeenCalled();
+    });
+
     it("loads the draft into all three fields and allows editing", async () => {
         render(<ShippingForm />);
 
