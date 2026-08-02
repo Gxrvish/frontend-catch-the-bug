@@ -9,7 +9,7 @@ tabs. Tests run against a fake `BroadcastChannel` (siblings receive a
 
 ## Ticket A — "My own clicks don't register"
 
-Increment in a tab and *that tab's* number doesn't move — only the other
+Increment in a tab and _that tab's_ number doesn't move — only the other
 tabs update. The acting tab sits at its old value until something else
 nudges it.
 
@@ -37,11 +37,11 @@ gone components.
 
 - **A:** `increment` only calls `postMessage(...)` and waits for the
   channel to "echo it back" — but a `BroadcastChannel` **does not deliver
-  a message to the sender**. Update local state directly *and* post for
+  a message to the sender**. Update local state directly _and_ post for
   the other tabs.
 - **B:** `onmessage` applies the incoming quantity and then
   `postMessage`s it again — re-broadcasting a received update. That
-  creates an infinite echo between tabs. Apply received updates *without*
+  creates an infinite echo between tabs. Apply received updates _without_
   re-broadcasting them.
 - **C:** the effect opens a `BroadcastChannel` but its cleanup is empty —
   it never `close()`s the channel on unmount. Close the channel in the
@@ -50,8 +50,14 @@ gone components.
 ## Requirements for the Fix
 
 - A local increment updates the acting tab (Red A).
-- Receiving a message does not re-broadcast it (Red B).
-- Unmounting closes the channel (Red C).
+- …and still reaches the other tabs, with exactly one announcement from
+  the tab that acted. A second tab agreeing because it echoed the
+  message back is not synchronisation (Red A2). Repeated increments
+  count up in both tabs (Red A3).
+- Receiving a message does not re-broadcast it (Red B) — but staying
+  quiet on receive must not turn into staying quiet on act (Red B2).
+- Unmounting closes the channel (Red C), and a closed tab receives
+  nothing afterwards. One channel per tab, not one per render (Red C2).
 - An incoming quantity still updates the tab (guard).
 - Research topics: `BroadcastChannel` semantics (sender doesn't receive
   its own posts), avoiding echo loops in cross-tab sync, closing channels
