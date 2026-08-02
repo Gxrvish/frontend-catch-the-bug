@@ -71,6 +71,32 @@ describe("LiveTicker", () => {
         expect(readValue()).toBeLessThan(1);
     });
 
+    it("advances by exactly the time that elapsed", () => {
+        render(<LiveTicker />);
+
+        act(() => FakeRaf.flush(1, 100)); // seeds the clock, adds nothing
+        act(() => FakeRaf.flush(1, 100)); // +0.1s
+        act(() => FakeRaf.flush(2, 100)); // +0.2s
+
+        // Clamping the first delta to something small also keeps it under
+        // 1 — and leaves every later frame carrying the leftover.
+        expect(readValue()).toBeCloseTo(0.3, 5);
+        expect(getFrames()).toBe(4);
+    });
+
+    it("starts a clean loop after a remount", () => {
+        const first = render(<LiveTicker />);
+        act(() => FakeRaf.flush(1, 16));
+        first.unmount();
+
+        _resetFrames();
+        render(<LiveTicker />);
+        act(() => FakeRaf.flush(1, 16));
+
+        // One widget on screen, one frame per flush.
+        expect(getFrames()).toBe(1);
+    });
+
     it("advances steadily while running", () => {
         render(<LiveTicker />);
         act(() => FakeRaf.flush(1, 100)); // warm up

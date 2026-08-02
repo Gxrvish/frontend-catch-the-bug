@@ -37,8 +37,12 @@ time elapsed instantly — before settling into a smooth rate.
 
 ## Requirements for the Fix
 
-- Unmounting stops the loop — no frames fire afterward (Red A).
-- The first frame doesn't jump (Red B).
+- Unmounting stops the loop — no frames fire afterward (Red A) — and a
+  remount runs **one** loop, not two (Red A2).
+- The first frame doesn't jump (Red B), and every frame after it advances
+  by exactly the time that elapsed. Clamping the first delta to something
+  small also keeps it under 1, and leaves every later frame carrying the
+  leftover (Red B2).
 - The counter still advances steadily while running (guard).
 - Research topics: `requestAnimationFrame`/`cancelAnimationFrame` loop
   lifecycle in effects, delta-time animation and seeding the frame clock
