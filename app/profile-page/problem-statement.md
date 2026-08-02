@@ -11,7 +11,7 @@ QA ticket from an identity-platform-scale company: "Backend flagged us in
 the API gateway dashboard: every single page view of `/profile-page` fires
 **three identical** `GET /user/u-1` requests within the same frame. At our
 traffic that triples the load on the users service for zero benefit. The
-page *looks* fine — the data is just fetched three times."
+page _looks_ fine — the data is just fetched three times."
 
 ## Problem
 
@@ -37,7 +37,7 @@ knows a request for that user is already in flight.
 
 The hook's comment celebrates that "each widget owns its own data fetch" —
 component independence is a fine goal, but it was implemented at the wrong
-layer. The components can stay independent; the *data layer* underneath
+layer. The components can stay independent; the _data layer_ underneath
 them must not be. When several consumers ask for the same resource at the
 same time, the network layer should hand every caller the **same in-flight
 promise** instead of starting a new request. This request deduplication is
@@ -49,6 +49,11 @@ data access and skipped it.
 - All three widgets must still render the user's name, plan, and card
   digits (guard test) while `fetchUser` is invoked exactly once — encoded
   in `ProfilePage.test.tsx`.
+- The sharing has to happen **while the request is in flight**: the count
+  is already 1 before anything resolves, not 3 that get deduplicated
+  afterwards.
+- It must survive StrictMode's double mount, which is exactly the storm
+  this dedupe exists for.
 - Keep the widgets independent: each still calls `useUser` itself. Fix the
   data layer they share, don't lift the fetch into the page and thread
   props down. Research topics: request deduplication, sharing in-flight
