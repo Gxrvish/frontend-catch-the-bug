@@ -30,121 +30,16 @@ export const BookingWizard = () => {
     const patch = (partial: Partial<BookingDetails>) =>
         setDetails((prev) => ({ ...prev, ...partial }));
 
-    // Keeping the step components inside the wizard means they can close over
-    // `details` and `patch` directly — no prop drilling, and each step stays
-    // right next to the state it edits.
-    const GuestInfoStep = () => (
-        <div className="space-y-3">
-            <div>
-                <label className="mb-1 block text-xs font-medium text-gray-700">
-                    Full name
-                </label>
-                <input
-                    aria-label="guest name"
-                    value={details.guestName}
-                    onChange={(e) => patch({ guestName: e.target.value })}
-                    placeholder="Jane Doe"
-                    className={inputClass}
-                />
-            </div>
-            <div>
-                <label className="mb-1 block text-xs font-medium text-gray-700">
-                    Email
-                </label>
-                <input
-                    aria-label="guest email"
-                    value={details.email}
-                    onChange={(e) => patch({ email: e.target.value })}
-                    placeholder="jane@example.com"
-                    className={inputClass}
-                />
-            </div>
-            <div>
-                <label className="mb-1 block text-xs font-medium text-gray-700">
-                    Guests
-                </label>
-                <select
-                    aria-label="guest count"
-                    value={details.guests}
-                    onChange={(e) => patch({ guests: Number(e.target.value) })}
-                    className={inputClass}
-                >
-                    {[1, 2, 3, 4, 5, 6].map((n) => (
-                        <option key={n} value={n}>
-                            {n} {n === 1 ? "guest" : "guests"}
-                        </option>
-                    ))}
-                </select>
-            </div>
-        </div>
-    );
-
-    const StayDatesStep = () => (
-        <div className="space-y-3">
-            <div>
-                <label className="mb-1 block text-xs font-medium text-gray-700">
-                    Check-in
-                </label>
-                <input
-                    aria-label="check-in date"
-                    type="date"
-                    value={details.checkIn}
-                    onChange={(e) => patch({ checkIn: e.target.value })}
-                    className={inputClass}
-                />
-            </div>
-            <div>
-                <label className="mb-1 block text-xs font-medium text-gray-700">
-                    Check-out
-                </label>
-                <input
-                    aria-label="check-out date"
-                    type="date"
-                    value={details.checkOut}
-                    onChange={(e) => patch({ checkOut: e.target.value })}
-                    className={inputClass}
-                />
-            </div>
-        </div>
-    );
-
-    const ReviewStep = () => (
-        <div className="space-y-2 text-sm text-gray-800">
-            <p>
-                <span className="font-medium">Guest:</span>{" "}
-                {details.guestName || "—"} ({details.email || "no email"})
-            </p>
-            <p>
-                <span className="font-medium">Party:</span> {details.guests}{" "}
-                guests
-            </p>
-            <p>
-                <span className="font-medium">Stay:</span> {details.checkIn} →{" "}
-                {details.checkOut}
-            </p>
-            {confirmationId ? (
-                <p
-                    data-testid="confirmation"
-                    className="rounded-lg bg-green-50 px-3 py-2 text-green-700"
-                >
-                    Booked! Confirmation {confirmationId}
-                </p>
-            ) : (
-                <button
-                    onClick={() => {
-                        void submitBooking(details).then((c) =>
-                            setConfirmationId(c.confirmationId)
-                        );
-                    }}
-                    className="w-full rounded-lg bg-rose-600 px-3 py-2 text-xs font-medium text-white hover:bg-rose-700"
-                >
-                    Confirm booking
-                </button>
-            )}
-        </div>
-    );
-
-    const stepBodies = [GuestInfoStep, StayDatesStep, ReviewStep];
+    const stepBodies = [
+        <GuestInfoStep key={1} details={details} patch={patch} />,
+        <StayDatesStep key={2} details={details} patch={patch} />,
+        <ReviewStep
+            key={3}
+            details={details}
+            confirmationId={confirmationId}
+            setConfirmationId={setConfirmationId}
+        />,
+    ];
     const CurrentStep = stepBodies[stepIndex];
 
     return (
@@ -175,7 +70,7 @@ export const BookingWizard = () => {
                 </ol>
 
                 <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                    <CurrentStep />
+                    {CurrentStep}
 
                     <div className="mt-4 flex justify-between">
                         <button
@@ -204,3 +99,133 @@ export const BookingWizard = () => {
         </main>
     );
 };
+
+const GuestInfoStep = ({
+    details,
+    patch,
+}: {
+    details: BookingDetails;
+    patch: (o: object) => void;
+}) => (
+    <div className="space-y-3">
+        <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700">
+                Full name
+            </label>
+            <input
+                aria-label="guest name"
+                value={details.guestName}
+                onChange={(e) => patch({ guestName: e.target.value })}
+                placeholder="Jane Doe"
+                className={inputClass}
+            />
+        </div>
+        <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700">
+                Email
+            </label>
+            <input
+                aria-label="guest email"
+                value={details.email}
+                onChange={(e) => patch({ email: e.target.value })}
+                placeholder="jane@example.com"
+                className={inputClass}
+            />
+        </div>
+        <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700">
+                Guests
+            </label>
+            <select
+                aria-label="guest count"
+                value={details.guests}
+                onChange={(e) => patch({ guests: Number(e.target.value) })}
+                className={inputClass}
+            >
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                    <option key={n} value={n}>
+                        {n} {n === 1 ? "guest" : "guests"}
+                    </option>
+                ))}
+            </select>
+        </div>
+    </div>
+);
+
+const StayDatesStep = ({
+    details,
+    patch,
+}: {
+    details: BookingDetails;
+    patch: (o: object) => void;
+}) => (
+    <div className="space-y-3">
+        <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700">
+                Check-in
+            </label>
+            <input
+                aria-label="check-in date"
+                type="date"
+                value={details.checkIn}
+                onChange={(e) => patch({ checkIn: e.target.value })}
+                className={inputClass}
+            />
+        </div>
+        <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700">
+                Check-out
+            </label>
+            <input
+                aria-label="check-out date"
+                type="date"
+                value={details.checkOut}
+                onChange={(e) => patch({ checkOut: e.target.value })}
+                className={inputClass}
+            />
+        </div>
+    </div>
+);
+
+const ReviewStep = ({
+    details,
+    confirmationId,
+    setConfirmationId,
+}: {
+    details: BookingDetails;
+    confirmationId: string | null;
+    setConfirmationId: (s: string) => void;
+}) => (
+    <div className="space-y-2 text-sm text-gray-800">
+        <p>
+            <span className="font-medium">Guest:</span>{" "}
+            {details.guestName || "—"} ({details.email || "no email"})
+        </p>
+        <p>
+            <span className="font-medium">Party:</span> {details.guests} guests
+        </p>
+        <p>
+            <span className="font-medium">Stay:</span> {details.checkIn} →{" "}
+            {details.checkOut}
+        </p>
+        {confirmationId ? (
+            <p
+                data-testid="confirmation"
+                className="rounded-lg bg-green-50 px-3 py-2 text-green-700"
+            >
+                Booked! Confirmation {confirmationId}
+            </p>
+        ) : (
+            <button
+                onClick={() => {
+                    void submitBooking(details).then((c) =>
+                        setConfirmationId(c.confirmationId)
+                    );
+                }}
+                className="w-full rounded-lg bg-rose-600 px-3 py-2 text-xs font-medium text-white hover:bg-rose-700"
+            >
+                Confirm booking
+            </button>
+        )}
+    </div>
+);

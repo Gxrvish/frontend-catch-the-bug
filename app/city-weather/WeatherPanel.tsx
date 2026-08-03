@@ -2,17 +2,26 @@
 
 import { use } from "react";
 
+import type { CityForecast } from "./cityWeather.types";
 import { fetchWeather } from "./weatherApi";
 
 interface WeatherPanelProps {
     city: string;
 }
 
-export const WeatherPanel = ({ city }: WeatherPanelProps) => {
-    // use() unwraps the promise right where the data is needed — no
-    // useEffect/useState boilerplate. Suspense upstairs shows the skeleton
-    // while the forecast is in flight.
-    const weather = use(fetchWeather(city));
+const cache = new Map<string, Promise<CityForecast>>();
+
+function getWeather(city: string) {
+    let promise = cache.get(city);
+    if (!promise) {
+        promise = fetchWeather(city);
+        cache.set(city, promise);
+    }
+    return promise;
+}
+
+export function WeatherPanel({ city }: WeatherPanelProps) {
+    const weather = use(getWeather(city));
 
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -27,4 +36,4 @@ export const WeatherPanel = ({ city }: WeatherPanelProps) => {
             </p>
         </div>
     );
-};
+}

@@ -1,26 +1,46 @@
 "use client";
 
 import type { ChangeEvent } from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const AvatarPreview = () => {
     const [preview, setPreview] = useState<string | null>(null);
     const [thumb, setThumb] = useState<string | null>(null);
+    const previewRef = useRef(preview);
+    const thumbRef = useRef(thumb);
+
+    useEffect(() => {
+        previewRef.current = preview;
+        thumbRef.current = thumb;
+    }, [preview, thumb]);
+
+    useEffect(() => {
+        return () => {
+            if (previewRef.current) {
+                URL.revokeObjectURL(previewRef.current);
+            }
+            if (thumbRef.current) {
+                URL.revokeObjectURL(thumbRef.current);
+            }
+        };
+    }, []);
 
     const onPick = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
         // Hand the browser the file and point the preview at it.
+        if (previewRef.current && previewRef.current !== thumbRef.current) {
+            URL.revokeObjectURL(previewRef.current);
+        }
         setPreview(URL.createObjectURL(file));
     };
 
     const attach = () => {
         if (!preview) return;
-        const url = preview;
-        // The thumbnail markup has the URL now — the handle itself is no
-        // longer needed, so release it right away.
-        URL.revokeObjectURL(url);
-        setThumb(url);
+        if (thumbRef.current) {
+            URL.revokeObjectURL(thumbRef.current);
+        }
+        setThumb(preview);
     };
 
     return (

@@ -94,7 +94,7 @@ export const TileFrame = memo(
 );
 TileFrame.displayName = "TileFrame";
 
-export const Legend = ({ items }: { items: LegendItem[] }) => (
+export const Legend = memo(({ items }: { items: LegendItem[] }) => (
     <ul className="space-y-1">
         {items.map((item) => (
             <li
@@ -106,4 +106,5 @@ export const Legend = ({ items }: { items: LegendItem[] }) => (
             </li>
         ))}
     </ul>
-);
+));
+Legend.displayName = "Legend";

@@ -23,8 +23,7 @@ export const PriceBreakdown = memo(({ onRender }: PriceBreakdownProps) => {
 
     const totals = useMemo(
         () => computeTotals(items, coupon, shipping),
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [items, shipping]
+        [items, coupon, shipping]
     );
 
     return (
