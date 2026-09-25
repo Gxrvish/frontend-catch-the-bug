@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState, useSyncExternalStore } from "react";
 
-import { type Cursor, getSnapshot, moveCursor, subscribe } from "./cursorStore";
+import { getSnapshot, moveCursor, subscribe } from "./cursorStore";
 import { debounce } from "./debounce";
 
 const BROADCAST_WAIT = 50;
 const MY_ID = "me";
 
+// Debounce our own outgoing cursor so we don't flood the wire.
+const broadcast = debounce((x: number, y: number) => {
+    moveCursor(MY_ID, x, y);
+}, BROADCAST_WAIT);
+
 export const CollabCursor = () => {
     // Read the shared cursor store: seed from the current snapshot, then
     // subscribe for future changes.
-    const [peers, setPeers] = useState<Cursor[]>(getSnapshot());
+    const peers = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
     useLayoutEffect(() => {
         // A peer was already moving when we connected — their first
@@ -19,18 +24,9 @@ export const CollabCursor = () => {
         moveCursor("p-1", 320, 240);
     }, []);
 
-    useEffect(() => {
-        return subscribe(() => setPeers(getSnapshot()));
-    }, []);
-
     // Show our own cursor instantly (optimistic), debounce the network
     // broadcast so we don't flood the wire.
     const [myPos, setMyPos] = useState({ x: 10, y: 10 });
-
-    // Debounce our own outgoing cursor so we don't flood the wire.
-    const broadcast = debounce((x: number, y: number) => {
-        moveCursor(MY_ID, x, y);
-    }, BROADCAST_WAIT);
 
     const nudge = (x: number, y: number) => {
         setMyPos({ x, y });
