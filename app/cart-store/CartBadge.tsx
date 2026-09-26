@@ -15,7 +15,7 @@ export const CartBadge = () => {
 
     // Pull the active (in-stock) items so we can show how many there are.
     const active = useStore((state) =>
-        state.items.filter((item) => item.qty > 0)
+        state.items ? state.items.filter((item) => item.qty > 0).length : 0
     );
 
     return (
@@ -23,7 +23,7 @@ export const CartBadge = () => {
             <p className="text-sm text-gray-900">
                 Active items:{" "}
                 <span data-testid="active-count" className="font-semibold">
-                    {active.length}
+                    {active}
                 </span>
             </p>
             <div className="mt-2 flex gap-2">
