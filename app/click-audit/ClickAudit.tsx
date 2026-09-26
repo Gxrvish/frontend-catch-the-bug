@@ -17,8 +17,14 @@ export const ClickAudit = () => {
         // buttons without registering anything.
         const onClick = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
-            if (target.matches("[data-cta]")) {
-                auditLog.push(target.dataset.cta ?? "unknown");
+            if (target.matches("[data-cta]") || target.closest("[data-cta]")) {
+                auditLog.push(
+                    target.dataset.cta ||
+                        target
+                            .closest("[data-cta]")
+                            ?.getAttribute("data-cta") ||
+                        "unknown"
+                );
                 setVersion((version) => version + 1);
             }
         };
@@ -55,10 +61,7 @@ export const ClickAudit = () => {
                     <button
                         data-cta="promo"
                         data-testid="promo"
-                        onClick={(event) => {
-                            // The widget keeps its clicks to itself so the
-                            // host page can't interfere with its menu.
-                            event.stopPropagation();
+                        onClick={() => {
                             setMenuOpen((open) => !open);
                         }}
                         className="rounded border border-gray-300 px-3 py-1 text-sm text-gray-900"
