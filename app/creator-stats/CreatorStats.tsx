@@ -8,14 +8,6 @@ import { useAdvancedStats } from "./useAdvancedStats";
 export const CreatorStats = () => {
     const [showAdvanced, setShowAdvanced] = useState(false);
 
-    // The analytics hook kicks off a network request the moment it runs.
-    // While the panel is closed nobody is looking at those numbers, so we
-    // skip the hook — and its request — entirely.
-    const advanced = showAdvanced
-        ? // eslint-disable-next-line react-hooks/rules-of-hooks -- data-only hook, safe to skip while the panel is hidden
-          useAdvancedStats(CHANNEL.id)
-        : null;
-
     return (
         <main className="min-h-screen bg-gray-100 p-8">
             <div className="mx-auto max-w-xl">
@@ -48,40 +40,36 @@ export const CreatorStats = () => {
                             : "Show advanced analytics"}
                     </button>
 
-                    {showAdvanced &&
-                        (advanced === null ? (
-                            <p className="mt-3 text-sm text-gray-500">
-                                Crunching numbers…
-                            </p>
-                        ) : (
-                            <dl className="mt-3 space-y-1 text-sm text-gray-800">
-                                <div className="flex justify-between">
-                                    <dt className="font-medium">Watch time</dt>
-                                    <dd>
-                                        {advanced.watchTimeHours.toLocaleString(
-                                            "en-US"
-                                        )}{" "}
-                                        h
-                                    </dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="font-medium">
-                                        Avg view duration
-                                    </dt>
-                                    <dd>{advanced.avgViewDurationSec}s</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="font-medium">RPM</dt>
-                                    <dd>${advanced.revenuePerMille}</dd>
-                                </div>
-                                <div className="flex justify-between">
-                                    <dt className="font-medium">Top video</dt>
-                                    <dd>{advanced.topVideo}</dd>
-                                </div>
-                            </dl>
-                        ))}
+                    {showAdvanced && <AdvancedStatsPanel />}
                 </div>
             </div>
         </main>
+    );
+};
+
+const AdvancedStatsPanel = () => {
+    const advanced = useAdvancedStats(CHANNEL.id);
+
+    return advanced === null ? (
+        <p className="mt-3 text-sm text-gray-500">Crunching numbers…</p>
+    ) : (
+        <dl className="mt-3 space-y-1 text-sm text-gray-800">
+            <div className="flex justify-between">
+                <dt className="font-medium">Watch time</dt>
+                <dd>{advanced.watchTimeHours.toLocaleString("en-US")} h</dd>
+            </div>
+            <div className="flex justify-between">
+                <dt className="font-medium">Avg view duration</dt>
+                <dd>{advanced.avgViewDurationSec}s</dd>
+            </div>
+            <div className="flex justify-between">
+                <dt className="font-medium">RPM</dt>
+                <dd>${advanced.revenuePerMille}</dd>
+            </div>
+            <div className="flex justify-between">
+                <dt className="font-medium">Top video</dt>
+                <dd>{advanced.topVideo}</dd>
+            </div>
+        </dl>
     );
 };
