@@ -27,7 +27,7 @@ export const connectionStore = {
     // Hand each consumer a fresh copy of the state, so no component can
     // reach in and mutate the store's internals through the snapshot.
     getSnapshot(): ConnectionSnapshot {
-        return { ...state };
+        return state;
     },
     getServerSnapshot(): ConnectionSnapshot {
         return SERVER_SNAPSHOT;
