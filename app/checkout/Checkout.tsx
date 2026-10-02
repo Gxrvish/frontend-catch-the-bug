@@ -8,6 +8,7 @@ import { PriceBreakdown } from "./PriceBreakdown";
 
 const GiftNoteInput = () => {
     const { giftNote, setGiftNote } = useCart();
+    const [draftInput, setDraftInput] = useState(giftNote);
 
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -15,8 +16,9 @@ const GiftNoteInput = () => {
                 Gift note
             </label>
             <input
-                value={giftNote}
-                onChange={(e) => setGiftNote(e.target.value)}
+                value={draftInput}
+                onChange={(e) => setDraftInput(e.target.value)}
+                onBlur={() => setGiftNote(draftInput)}
                 placeholder="Happy birthday!..."
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500"
             />

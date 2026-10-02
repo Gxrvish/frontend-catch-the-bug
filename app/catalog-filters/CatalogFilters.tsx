@@ -1,7 +1,7 @@
 "use client";
 
 import type { ChangeEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const BRANDS = ["All", "Nike", "Adidas", "Fog & Mist"];
 
@@ -18,20 +18,39 @@ export const CatalogFilters = () => {
     const [brand, setBrand] = useState("All");
     const [search, setSearch] = useState("");
 
+    const handlePopState = () => {
+        {
+            const params = new URLSearchParams(location.search);
+            setBrand(params.get("brand") || "All");
+            setSearch(params.get("q") || "");
+        }
+    };
+
+    useEffect(() => {
+        window.addEventListener("popstate", handlePopState);
+        return () => {
+            window.removeEventListener("popstate", handlePopState);
+        };
+    }, []);
+
     const pickBrand = (next: string) => {
         setBrand(next);
         // Put the filter in the URL so the view is shareable.
-        window.history.pushState({ brand: next }, "", `/?brand=${next}`);
+        const params = new URLSearchParams(location.search);
+        params.set("brand", next);
+        window.history.pushState({ brand: next }, "", `/?${params.toString()}`);
     };
 
     const onSearch = (event: ChangeEvent<HTMLInputElement>) => {
         const text = event.target.value;
         setSearch(text);
         // Keep the URL in sync with what's on screen, keystroke by keystroke.
-        window.history.pushState(
+        const params = new URLSearchParams(location.search);
+        params.set("q", text);
+        window.history.replaceState(
             { brand, search: text },
             "",
-            `/?brand=${brand}&q=${text}`
+            `/?${params.toString()}`
         );
     };
 

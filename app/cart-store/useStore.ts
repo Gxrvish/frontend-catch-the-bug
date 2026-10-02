@@ -11,7 +11,7 @@ export const useStore = <T>(selector: (state: CartState) => T): T => {
         const unsubscribe = subscribe(() => setValue(selector(getState())));
         // The store is a session-long singleton, so there's nothing to
         // tear down when one widget unmounts — the subscription can stay.
-        void unsubscribe;
+        return unsubscribe;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

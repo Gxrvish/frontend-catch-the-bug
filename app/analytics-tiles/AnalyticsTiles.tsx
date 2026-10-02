@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
+import type { StatOptions } from "./analyticsTiles.types";
 import { ACTIONS, DEVICE_LEGEND, STATS, TRAFFIC_LEGEND } from "./tileData";
 import { ActionTile, Legend, StatTile, TileFrame } from "./tiles";
 
 export const AnalyticsTiles = () => {
     const [refreshCount, setRefreshCount] = useState(0);
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const statOptions: StatOptions = useMemo(
+        () => ({ currency: "EUR", compact: true }),
+        []
+    );
+    const onSelect = useCallback((id: string) => setSelectedId(id), []);
+    const TrafficLegend = useMemo(() => <Legend items={TRAFFIC_LEGEND} />, []);
+    const DeviceLegend = useMemo(() => <Legend items={DEVICE_LEGEND} />, []);
 
     return (
         <main className="min-h-screen bg-gray-100 p-8">
@@ -39,7 +47,7 @@ export const AnalyticsTiles = () => {
                             // The options never change — same keys, same
                             // values on every render — so the memoized tile
                             // sees identical props each time.
-                            options={{ currency: "EUR", compact: true }}
+                            options={statOptions}
                         />
                     ))}
 
@@ -52,18 +60,16 @@ export const AnalyticsTiles = () => {
                             // The arrow only keeps the id in scope; the
                             // memoized tile sees the same function body on
                             // every render.
-                            onSelect={() => setSelectedId(tile.id)}
+                            onSelect={onSelect}
                         />
                     ))}
 
                     <TileFrame title="Traffic sources">
                         {/* Static markup — these children are identical
                             between renders. */}
-                        <Legend items={TRAFFIC_LEGEND} />
+                        {TrafficLegend}
                     </TileFrame>
-                    <TileFrame title="Devices">
-                        <Legend items={DEVICE_LEGEND} />
-                    </TileFrame>
+                    <TileFrame title="Devices">{DeviceLegend}</TileFrame>
                 </div>
             </div>
         </main>

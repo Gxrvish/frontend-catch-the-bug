@@ -51,7 +51,14 @@ export function useActivityFeed(
                 const page = await fetchRecentItems(ctrl.signal);
 
                 if (active && !ctrl.signal.aborted) {
-                    setItems((prev) => mergeServerBatch(prev, page.items));
+                    setItems((prev) =>
+                        mergeServerBatch(
+                            prev,
+                            page.items,
+                            pendingLikes.current,
+                            pendingDismissals.current
+                        )
+                    );
                     setHasMore(page.hasMore);
                     setError(null);
                 }
@@ -112,7 +119,9 @@ export function useActivityFeed(
                 pendingLikes.current.delete(itemId);
 
                 if (wasPending) {
-                    setItems((prev) => rollbackLikeState(prev, itemId));
+                    setItems((prev) =>
+                        rollbackLikeState(prev, itemId, pendingLikes.current)
+                    );
                 }
             }
         })();
@@ -150,7 +159,14 @@ export function useActivityFeed(
         (async () => {
             try {
                 const page = await fetchOlderItems(anchorId, pageSize);
-                setItems((prev) => mergeServerBatch(prev, page.items));
+                setItems((prev) =>
+                    mergeServerBatch(
+                        prev,
+                        page.items,
+                        pendingLikes.current,
+                        pendingDismissals.current
+                    )
+                );
                 setHasMore(page.hasMore);
             } catch (err) {
                 if (

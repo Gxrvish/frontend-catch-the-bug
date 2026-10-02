@@ -35,7 +35,7 @@ export const listenerCount = () => listeners.size;
 // Apply an update to the store, then wake every subscriber. Callers send
 // the slice they touched and we swap it in.
 export const setState = (partial: Partial<CartState>) => {
-    state = partial as CartState;
+    state = { ...state, ...partial };
     listeners.forEach((listener) => listener());
 };
 

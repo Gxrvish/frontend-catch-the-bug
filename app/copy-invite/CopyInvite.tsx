@@ -20,10 +20,15 @@ export const CopyInvite = () => {
     const [status, setStatus] = useState<Status>("idle");
     const linkRef = useRef<HTMLSpanElement>(null);
 
-    const onCopy = () => {
-        // Copy exactly what the user sees in the pill.
-        const shown = linkRef.current?.textContent ?? "";
-        navigator.clipboard.writeText(shown);
+    const onCopy = async () => {
+        const shown = INVITE_LINK;
+        setStatus("copying");
+        try {
+            await navigator.clipboard.writeText(shown);
+        } catch {
+            setStatus("failed");
+            return;
+        }
         setStatus("copied");
     };
 

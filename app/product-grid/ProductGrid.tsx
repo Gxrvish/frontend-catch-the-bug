@@ -68,8 +68,8 @@ export const ProductGrid = () => {
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
-                    {visible.map((product, index) => (
-                        <ProductCard key={index} product={product} />
+                    {visible.map((product) => (
+                        <ProductCard key={product.id} product={product} />
                     ))}
                 </div>
             </div>
