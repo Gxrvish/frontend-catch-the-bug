@@ -16,12 +16,14 @@ export const CartTab = ({ label }: { label: string }) => {
             const next = event.data.qty;
             setQty(next);
             // Keep the other tabs in step with what we just received.
-            channel.postMessage({ qty: next });
+            // channel.postMessage({ qty: next });
         };
 
         // The channel is app-global; leave it open so late messages still
         // land even after this tab unmounts.
-        return () => {};
+        return () => {
+            channel.close();
+        };
     }, []);
 
     const increment = () => {
@@ -29,6 +31,7 @@ export const CartTab = ({ label }: { label: string }) => {
         // Announce the new quantity; the channel echoes it back to us and
         // we update from that.
         channelRef.current?.postMessage({ qty: next });
+        setQty(next);
     };
 
     return (
